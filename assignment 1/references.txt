@@ -1,0 +1,6 @@
+handle variable size inputs : https://mkyong.com/c/how-to-handle-unknow-size-user-input-in-c/
+
+string tokenizing : https://www.tutorialspoint.com/c_standard_library/c_function_strtok.htm
+
+https://stackoverflow.com/questions/26793402/visually-what-happens-to-fork-in-a-for-loop,
+
