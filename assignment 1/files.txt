@@ -1,0 +1,13 @@
+dup completed 
+a.out
+break1
+checkcpupercentage
+checkcpupercentage.c
+​checkresidentmemory
+​checkresidentmemory.c
+files.txt
+makefile
+myshell
+myshell.c
+Problem Statement.pdf
+references.txt

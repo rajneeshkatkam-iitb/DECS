@@ -6,3 +6,8 @@ https://stackoverflow.com/questions/26793402/visually-what-happens-to-fork-in-a-
 
 https://stackoverflow.com/questions/10651999/how-can-i-check-if-a-single-char-exists-in-a-c-string#:~:text=char%20*strchr(const%20char%20*,not%20occur%20in%20the%20string.
 https://www.tutorialspoint.com/c_standard_library/c_function_strstr.htm
+http://www.learnlinux.org.za/courses/build/shell-scripting/ch01s04.html#:~:text=Generally%20standard%20input%2C%20referred%20to,standard%20input%20from%20a%20file.
+https://eklitzke.org/stdout-buffering
+https://www.geeksforgeeks.org/input-output-system-calls-c-create-open-close-read-write/
+https://linux.die.net/man/3/close
+https://stackoverflow.com/questions/5950395/makefile-to-compile-multiple-c-programs

@@ -4,10 +4,33 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <fcntl.h>
 
 
 static char *builtinCommands[3]={"cd","help","exit"};
-static char *customCommands[10]={"","","","",""};
+static char *customCommands[10]={"checkcpupercentage","checkresidentmemory","listFiles"};
+static int commantCount=3;
+static int builtinCount=3;
+
+// 0->Not builtin or custom. 1->builtin. 2->custom
+int CommandsChecker(char *command){
+
+    //builtin commands checker
+    for(int i=0;i<builtinCount;i++){
+        if(strcmp(command,builtinCommands[i])==0)
+            return 1;
+    }
+
+    //custom commands checker
+    for(int i=0;i<commantCount;i++){
+        if(strcmp(command,customCommands[i])==0)
+            return 2;
+    }
+
+    return 0;
+}
+
+
 
 //IO Parser for with Pipe ---- 2 arguments passed 
 void checkIOParserPipe(char *str1,char *str2){
@@ -16,12 +39,27 @@ void checkIOParserPipe(char *str1,char *str2){
 
 }
 
-
+//Remove spacing in commands
 void removeSpacesAndCreateTokens(char *tokensWithSpaces, char **finalTokens){
+	for (int i = 0; i < 200; i++) { 
+		finalTokens[i] = strsep(&tokensWithSpaces, " "); 
+
+		if (finalTokens[i] == NULL) 
+			break; 
+		if (strlen(finalTokens[i]) == 0) 
+			i--; 
+	} 
 
 }
 
+//Remove spacing in filestream
 void fileRemoveSpacesAndCreateTokens(char *filewithSpace, char *finalFile){
+
+    finalFile= strsep(&filewithSpace, " ");
+    while(finalFile==NULL || (strcmp(finalFile,"")==0))
+    {
+        finalFile=strsep(&filewithSpace, " ");
+    }
 
 }
 
@@ -29,9 +67,13 @@ void tokenizeCommandsAndArguments(char *icommand, char **str1Tokens, char *tempf
 
 
     removeSpacesAndCreateTokens(icommand,str1Tokens);
-    
+
+
     if(direction!=0)
-        fileRemoveSpacesAndCreateTokens(tempfile, file);
+     {
+         fileRemoveSpacesAndCreateTokens(tempfile, file);
+          printf("file: %s \n tempfile:%s",file,tempfile);
+     }   
 
 }
 
@@ -62,37 +104,22 @@ int checkIOParser(char *str1, char *file,char **str1Tokens){
         if(icommand!=NULL)
             tempfile=strtok(NULL,"<");
 
+    }else
+    {
+        icommand=str1;
     }
+    
+    tokenizeCommandsAndArguments(icommand, str1Tokens, tempfile, file, direction);
 
     if(direction!=0)
         printf("checkIOParser- icommand is: %s  \t file is: %s \n", icommand,file);
-    // tokenizeCommandsAndArguments(icommand, str1Tokens, tempfile, file, direction);
+    
 
     return direction;
 }
 
 
-// 0->Not builtin or custom. 1->builtin. 2->custom
-int CommandsChecker(char *command){
-
-    //builtin commands checker
-    for(int i=0;i<3;i++){
-        if(command==builtinCommands[i])
-            return 1;
-    }
-
-    //custom commands checker
-    for(int i=0;i<10;i++){
-        if(command==customCommands[i])
-            return 2;
-    }
-
-    return 0;
-}
-
-
-
-/////Execute individual commands after parsing it with ';' seperator
+//Execute individual commands after parsing it with ';' seperator
 void executeCommand(char *str){
 
     //Check if pipe '|' is present in the command str and split accordingly into two seperate strings to be processed in pipe functionality
@@ -110,86 +137,99 @@ void executeCommand(char *str){
 
     if(str2==NULL){
 
-        ////No Pipe is present. Perform execution using one child
+        //No Pipe is present. Perform execution using one child
         printf("executeCommand- Without pipe str1 is: %s \n", str1);
         int direction = checkIOParser(str1, file,str1Tokens);
 
-        printf("executeCommand- direction is: %d \n", direction);
+
+
+        //printf("executeCommand- direction is: %d \n", direction);
 
         // //check str1Tokens[0] with custom commands. If not present then execvp...if it throws errors, then you through Illegal commands error
-        // int commandCheckerFlag=CommandsChecker(str1Tokens[0]);
+        int commandCheckerFlag=CommandsChecker(str1Tokens[0]);
+
+        if(strcmp(str1Tokens[0],"checkresidentmemory")==0){
+            printf("resident memory code entered \n");
+            str1Tokens[0]="ps";
+            str1Tokens[3]=str1Tokens[1];
+            str1Tokens[1]="-o";
+            str1Tokens[2]="rss=";
+            str1Tokens[4]=NULL;
+        }
+        else if(strcmp(str1Tokens[0],"listFiles")==0){
+            printf("listFiles code entered \n");
+            str1Tokens[0]="ls";
+            str1Tokens[1]=NULL;
+        }
+
+        ///printing tokens
+       // /*
+        int i=0;
+        while(str1Tokens[i]!=NULL){
+            printf("%s\n",str1Tokens[i]);
+            i++;
+        }
+       // */
 
 
-        // if(commandCheckerFlag==1)
-        // {
-        //     // runBuiltIn(str1Tokens, file, direction);
-        // }
-        // else if(commandCheckerFlag==2)
-        // {
-        //     // runCustomCommands(str1Tokens, file, direction);
-        // }
-        // else{
-        //     // runExecutable(str1Tokens, file, direction);
-        // }
+        if(commandCheckerFlag==1)
+        {
+            // runBuiltIn(str1Tokens, file, direction);
+            printf("run builtin command \n");
+        }
+        else if(commandCheckerFlag==2)
+        {
+            printf("run custom command \n");
 
+            if(strcmp(str1Tokens[0],"ps")!=0 && strcmp(str1Tokens[0],"ls")!=0){
+            // Concatinating ./ to the first argument to make it executable custom command
+            char a[100]="./";
+            strcat(a,str1Tokens[0]);
+            str1Tokens[0]=a;
+            }
 
+            if(direction==0){
 
+                pid_t pid=fork();
 
+                if(pid==0){
+                    //child process
 
-    }
-    else{
-        ////Pipe is present. Execute the first command and output of it, feed it to the input of second command
+                    //This is for 
+                    if(strcmp(str1Tokens[0],"ls")==0){
+                        int fd=open("files.txt", O_WRONLY | O_CREAT | O_TRUNC, 0666); 
+                        dup2(fd,1);
+                        printf("dup completed \n");
+                        if(execvp(str1Tokens[0],str1Tokens)<0){
+                            printf("​Child: Illegal command or arguments \n");
+                            exit(0);
+                        }
+                    }
+
+                    if(execvp(str1Tokens[0],str1Tokens)<0){
+                        printf("​Child: Illegal command or arguments \n");
+                        exit(0);
+                    }
+                }
+                else{
+                    //parent process
+                    wait(NULL);
+                }
+            
+            }
+            //runCustomCommands(str1Tokens, file, direction);
+        }else
+        {
+            printf("executeCommands: Illegal command or arguments​ \n");
+        }
         
-        printf("executeCommand- With Pipe str1 is: %s \n", str1);
-        printf("executeCommand- With Pipe str2 is: %s \n", str2);
-        //checkIOParserPipe(str1, str2);
 
     }
 
 }
 
-
-
-
-int main(){
-
-    while(1){
-
-        //Input string lengths and extend length variable
-        unsigned int extend_length=64, max_input_length=256, input_index=0;
-
-        // Malloc declaration for input command string
-        char *input=(char *) malloc(sizeof(char)*max_input_length);
-
-        //command prompt print
-        fflush(stdout);
-        printf("myShell> ");
-        fflush(stdout);
-
-        //Command Input loop
-        fflush(stdin);
-        char c = getchar();
-        if(c=='\n')
-            input[0]='\n';
-        while(c!='\n' && c!=EOF){
-            input[input_index++]=c;
-            
-            //Buffer overflow check and extending the size of input using realloc
-            if(input_index==max_input_length){
-                max_input_length+=extend_length;
-                input=realloc(input,sizeof(char)*max_input_length);
-            }
-            c=getchar();
-        }
-
-        //If input is null
-        if(input!=NULL && input[0]!='\n'){
-
-
-            //If input cmd is "exit", then exit the program without executing further
-            if(strstr(input,"exit"))
-                return 0;
-
+//Custom Command Pipe Execution
+void customCustomPipe(char *input){
 
 
             // Command Seperator function i.e. when it detects ";", then it seperates the command (tokens) and stores them in the commands pointer array 
@@ -233,6 +273,102 @@ int main(){
 
 
             }
+
+}
+
+
+int main(){
+
+    while(1){
+
+        //Input string lengths and extend length variable
+        unsigned int extend_length=64, max_input_length=256, input_index=0;
+
+        // Malloc declaration for input command string
+        char *input=(char *) malloc(sizeof(char)*max_input_length);
+
+        //command prompt print
+        fflush(stdout);
+        printf("myShell> ");
+        fflush(stdout);
+
+        //Command Input loop
+        fflush(stdin);
+        char c = getchar();
+        if(c=='\n')
+            input[0]='\n';
+        while(c!='\n' && c!=EOF){
+            input[input_index++]=c;
+            
+            //Buffer overflow check and extending the size of input using realloc
+            if(input_index==max_input_length){
+                max_input_length+=extend_length;
+                input=realloc(input,sizeof(char)*max_input_length);
+            }
+            c=getchar();
+        }
+
+        //If input is null
+        if(input!=NULL && input[0]!='\n'){
+            
+
+            //checking first command;
+            char input_copy[input_index];
+            strcpy(input_copy,input);
+            char *first_command=strtok(input_copy," ");
+            while(first_command!=NULL && strcmp(first_command," ")==0){
+                first_command=strtok(input_copy," ");
+            }
+
+            printf("first command is:%s \n",first_command);
+
+            //If input cmd is "exit", then exit the program without executing further
+            if(strcmp(first_command,"exit")==0)
+                return 0;
+
+            int commandchecker=CommandsChecker(first_command);
+            
+
+            if(commandchecker==1)
+            {
+                // runBuiltIn(str1Tokens, file, direction);
+                printf("run builtin command \n");
+            }
+            else if(commandchecker==2)
+            {
+                printf("run custom command \n");
+
+                executeCommand(input);
+
+                //runCustomCommands(str1Tokens, file, direction);
+            }
+            else{
+                printf("​main: Illegal command or arguments​ \n");
+            }
+            // else
+            // {
+
+            //     // runExecutable(str1Tokens, file, direction);
+            //     printf("/usr/bin executable command \n");
+            //         pid_t pid=fork();
+
+            //         if(pid==0){
+            //             //child process
+            //             char *args[]={"ls","-l -a", NULL};
+            //             if(execvp("ls",args)<0){
+            //                 printf("​ Illegal command or arguments \n");
+            //                 exit(0);
+            //             }
+            //         }
+            //         else{
+            //             //parent process
+            //             wait(NULL);
+            //         }
+                
+            // }
+
+
+
 
         }
         else
