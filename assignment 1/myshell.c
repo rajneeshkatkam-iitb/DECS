@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include<signal.h> 
 
 static char *builtinCommands[3] = {"cd", "help", "exit"};
 static char *customCommands[10] = {"checkcpupercentage", "checkresidentmemory", "listFiles", "sortFile"};
@@ -337,26 +338,30 @@ int main()
             if(strcmp(first_command,"executeCommands")==0){
                 char *str1Tokens[5];
                 tokenizeCommandsAndArguments(input, str1Tokens, NULL, NULL, 0);
+                
+                // Characters to read
+                int buffer_size=5000;
 
-                char *buffer=calloc(2000,sizeof(char));
+                char *buffer=calloc(buffer_size,sizeof(char));
                 int fd=open(str1Tokens[1],O_RDONLY);
                 if(fd<0){
                     printf("​main: Illegal command or arguments​ \n");
                 }else{
 
-                    int charCount=read(fd,buffer,2000);
+                    int charCount=read(fd,buffer,buffer_size);
                         close(fd);
                     //printf("buffer content is: %s \n", buffer);
                     char *single_command;
-                    for (int i = 0; i < 2000; i++)
+                    for (int i = 0; i < buffer_size; i++)
                     {
                         single_command = strsep(&buffer, "\n");
 
                         if (single_command == NULL || strcmp(single_command,"")==0)
                             break;
 
-                        executeCommand(single_command);
-
+                        if(commaChecker(single_command)==0){
+                            executeCommand(single_command);
+                        }
                     }
 
                 }

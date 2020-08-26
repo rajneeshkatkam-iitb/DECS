@@ -2,6 +2,6 @@ ps -a
 ls
 checkcpupercentage 32324
 checkresidentmemory 32324
-pwd
+pwd ; ps -a
 date
 listFiles
