@@ -189,6 +189,11 @@ void executeCommand(char *str)
             }
 
             pid_t pid = fork();
+            if (pid == -1) {
+                perror("fork failed");
+                exit(1);
+            }
+
 
             if (pid == 0)
             {
@@ -253,6 +258,11 @@ int commaChecker(char *input)
         //printf("\n main- command1 is: %s \n", command1);
         //printf("main- command2 is: %s \n", command2);
         pid_t pid = fork();
+        if (pid == -1) {
+            perror("fork failed");
+            exit(1);
+        }
+
         if (pid == 0)
         {
 
@@ -263,6 +273,11 @@ int commaChecker(char *input)
         else
         {
             pid_t pid1 = fork();
+            if (pid1 == -1) {
+               perror("fork failed");
+               exit(1);
+            }
+
             if (pid1 == 0)
             {
                 //printf("main- command 2 executed with fork \n");
