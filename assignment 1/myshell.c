@@ -281,9 +281,37 @@ int commaChecker(char *input)
     return 0;
 }
 
+void sigint_handler(int sig){
+
+    printf("​\nthe program is interrupted, do you want to exit [Y/N]");
+    fflush(stdout);
+    fflush(stdin);
+    char *buffer=calloc(100,sizeof(char));
+    read(0,buffer,100);
+
+    //printf("​ the pid is: %d and  buffer string is : %s", getpid(),first_command);
+
+    if(strcmp(buffer,"Y\n")==0){
+        kill(getpid(),SIGKILL);
+    }else{
+        fflush(stdout);
+        printf("myShell> ");
+        fflush(stdout);
+    }
+}
+
+void sigterm_handler(int sig){
+    printf("​\nGot SIGTERM-Leaving\n");
+    kill(getpid(),SIGKILL);
+}
+
+
 int main()
 {
 
+    signal(SIGINT, sigint_handler); 
+    signal(SIGTERM, sigterm_handler); 
+    
     while (1)
     {
 
@@ -305,6 +333,7 @@ int main()
             input[0] = '\n';
         while (c != '\n' && c != EOF)
         {
+
             input[input_index++] = c;
 
             //Buffer overflow check and extending the size of input using realloc
