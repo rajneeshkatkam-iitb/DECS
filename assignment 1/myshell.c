@@ -70,7 +70,7 @@ void tokenizeCommandsAndArguments(char *icommand, char **str1Tokens, char *tempf
     if (direction != 0)
     {
         fileRemoveSpacesAndCreateTokens(tempfile, file);
-        printf("file: %s \n tempfile:%s", file, tempfile);
+        //printf("file: %s \n tempfile:%s", file, tempfile);
     }
 }
 
@@ -104,8 +104,8 @@ int checkIOParser(char *str1, char *file, char **str1Tokens)
 
     tokenizeCommandsAndArguments(icommand, str1Tokens, tempfile, file, direction);
 
-    if (direction != 0)
-        printf("checkIOParser- icommand is: %s  \t file is: %s \n", icommand, file);
+    //if (direction != 0)
+    //    printf("checkIOParser- icommand is: %s  \t file is: %s \n", icommand, file);
 
     return direction;
 }
@@ -130,7 +130,7 @@ void executeCommand(char *str)
     {
 
         //No Pipe is present. Perform execution using one child
-        printf("executeCommand- Without pipe str1 is: %s \n", str1);
+        //printf("executeCommand- Without pipe str1 is: %s \n", str1);
         int direction = checkIOParser(str1, file, str1Tokens);
 
         //printf("executeCommand- direction is: %d \n", direction);
@@ -140,7 +140,7 @@ void executeCommand(char *str)
 
         if (strcmp(str1Tokens[0], "checkresidentmemory") == 0)
         {
-            printf("resident memory code entered \n");
+            //printf("checkresidentmemory code entered \n");
             str1Tokens[0] = "ps";
             str1Tokens[3] = str1Tokens[1];
             str1Tokens[1] = "-o";
@@ -149,12 +149,13 @@ void executeCommand(char *str)
         }
         else if (strcmp(str1Tokens[0], "listFiles") == 0)
         {
-            printf("listFiles code entered \n");
+            //printf("listFiles code entered \n");
             str1Tokens[0] = "ls";
             str1Tokens[1] = NULL;
         }
         else if (strcmp(str1Tokens[0], "sortFile") == 0)
         {
+            //printf("sortFile code entered \n");
             str1Tokens[0] = "sort";
             str1Tokens[2] = NULL;
         }
@@ -176,7 +177,7 @@ void executeCommand(char *str)
         }
         else
         {
-            printf("run custom command \n");
+            //printf("run custom command or executable command \n");
 
             if (commandCheckerFlag==2 && strcmp(str1Tokens[0], "checkcpupercentage") == 0)
             {
@@ -197,7 +198,6 @@ void executeCommand(char *str)
                 {
                     int fd = open("files.txt", O_WRONLY | O_CREAT | O_TRUNC, 0666);
                     dup2(fd, 1);
-                    printf("dup completed \n");
                     if (execvp(str1Tokens[0], str1Tokens) < 0)
                     {
                         printf("​Child: Illegal command or arguments \n");
@@ -205,7 +205,20 @@ void executeCommand(char *str)
                     }
                 }
 
-                //This is for checkcpupercentage, sortFile and checkresidentmemory
+                if(strcmp(str1Tokens[0], "sort") == 0 && commandCheckerFlag==2){
+
+                    int fd=open(str1Tokens[1],O_RDONLY);
+                    dup2(fd,0);
+                    str1Tokens[1]=NULL;
+                    if (execvp(str1Tokens[0], str1Tokens) < 0)
+                    {
+                        printf("​Child: Illegal command or arguments \n");
+                        exit(0);
+                    }
+
+                }
+
+                //This is for checkcpupercentage and checkresidentmemory
                 if (execvp(str1Tokens[0], str1Tokens) < 0)
                 {
                     printf("​Child: Illegal command or arguments \n");
@@ -223,7 +236,7 @@ void executeCommand(char *str)
 }
 
 //Custom Command Pipe Execution
-void customCustomPipe(char *input)
+int commaChecker(char *input)
 {
 
     // Command Seperator function i.e. when it detects ";", then it seperates the command (tokens) and stores them in the commands pointer array
@@ -233,22 +246,16 @@ void customCustomPipe(char *input)
     if (command1 != NULL)
         command2 = strtok(NULL, ";");
 
-    if (command2 == NULL)
+    if (command2 != NULL)
     {
 
-        printf("\n main- command1 is: %s \n", command1);
-        printf("main- only command 1 executed without fork \n");
-        executeCommand(command1);
-    }
-    else
-    {
-        printf("\n main- command1 is: %s \n", command1);
-        printf("main- command2 is: %s \n", command2);
+        //printf("\n main- command1 is: %s \n", command1);
+        //printf("main- command2 is: %s \n", command2);
         pid_t pid = fork();
         if (pid == 0)
         {
 
-            printf("main- command 1 executed with fork \n");
+            //printf("main- command 1 executed with fork \n");
             executeCommand(command1);
             exit(0);
         }
@@ -257,7 +264,7 @@ void customCustomPipe(char *input)
             pid_t pid1 = fork();
             if (pid1 == 0)
             {
-                printf("main- command 2 executed with fork \n");
+                //printf("main- command 2 executed with fork \n");
                 executeCommand(command2);
                 exit(0);
             }
@@ -265,9 +272,12 @@ void customCustomPipe(char *input)
             {
                 wait(NULL);
                 wait(NULL);
+                return 1;
             }
         }
     }
+
+    return 0;
 }
 
 int main()
@@ -318,53 +328,34 @@ int main()
                 first_command = strtok(input_copy, " ");
             }
 
-            printf("first command is:%s \n", first_command);
+            //printf("first command is:%s \n", first_command);
 
             //If input cmd is "exit", then exit the program without executing further
             if (strcmp(first_command, "exit") == 0)
                 return 0;
 
-            int commandchecker = CommandsChecker(first_command);
+            if(strcmp(first_command,"executeCommands")==0){
+                char *str1Tokens[5];
+                tokenizeCommandsAndArguments(input, str1Tokens, NULL, NULL, 0);
 
-            if (commandchecker == 0)
-            {
-                // runBuiltIn(str1Tokens, file, direction);
-                printf("run builtin command \n");
+                
+
+                ///printing tokens
+                ///*
+                int i = 0;
+                while (str1Tokens[i] != NULL)
+                {
+                    printf("%s\n", str1Tokens[i]);
+                    i++;
+                }
+                //*/
+
+
+            }
+            else if(commaChecker(input)==0){
                 executeCommand(input);
             }
-            else if (commandchecker == 2)
-            {
-                printf("run custom command \n");
-
-                executeCommand(input);
-
-                //runCustomCommands(str1Tokens, file, direction);
-            }
-            else
-            {
-                printf("​main: Illegal command or arguments​ \n");
-            }
-            // else
-            // {
-
-            //     // runExecutable(str1Tokens, file, direction);
-            //     printf("/usr/bin executable command \n");
-            //         pid_t pid=fork();
-
-            //         if(pid==0){
-            //             //child process
-            //             char *args[]={"ls","-l -a", NULL};
-            //             if(execvp("ls",args)<0){
-            //                 printf("​ Illegal command or arguments \n");
-            //                 exit(0);
-            //             }
-            //         }
-            //         else{
-            //             //parent process
-            //             wait(NULL);
-            //         }
-
-            // }
+           
         }
         else
         {

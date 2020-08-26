@@ -88,8 +88,8 @@ int main(int argc, char *argv[]){
     long double utime_percentage= (utime[1]-utime[0])*cores*100/ttime_diff;
     long double stime_percentage= (stime[1]-stime[0])*cores*100/ttime_diff;
 
-    printf("user mode cpu percentage: %0.01Lf\n",utime_percentage);
-    printf("system mode cpu percentage: %0.01Lf\n",stime_percentage);
+    printf("user mode cpu percentage: %ld%%\n",(long int)utime_percentage);
+    printf("system mode cpu percentage: %ld%%\n",(long int)stime_percentage);
 
 
     return 0;

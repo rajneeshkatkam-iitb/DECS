@@ -1,15 +1,10 @@
-dup completed 
-total 272
-drwxrwxr-x 2 raj raj   4096 Aug 26 19:07 .
-drwxrwxr-x 4 raj raj   4096 Aug 25 20:27 ..
--rwxrwxr-x 1 raj raj  24048 Aug 26 19:05 a.out
--rw-rw-r-- 1 raj raj    106 Aug 24 20:33 break1
--rwxrwxr-x 1 raj raj  17224 Aug 25 22:17 checkcpupercentage
--rw-rw-r-- 1 raj raj   2646 Aug 25 21:53 checkcpupercentage.c
--rw-rw-r-- 1 raj raj      0 Aug 26 18:58 checkresidentmemory.c
--rw-rw-r-- 1 raj raj     15 Aug 26 19:07 files.txt
--rw-rw-r-- 1 raj raj    292 Aug 26 02:37 makefile
--rwxrwxr-x 1 raj raj  18216 Aug 26 19:05 myshell
--rw-rw-r-- 1 raj raj  10545 Aug 26 19:04 myshell.c
--rw-rw-r-- 1 raj raj 170578 Aug 20 21:25 Problem Statement.pdf
--rw-rw-r-- 1 raj raj    930 Aug 25 20:25 references.txt
+a.out
+break1
+checkcpupercentage
+checkcpupercentage.c
+files.txt
+makefile
+myshell
+myshell.c
+Problem Statement.pdf
+references.txt
