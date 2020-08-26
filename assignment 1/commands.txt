@@ -1,0 +1,7 @@
+ps -a
+ls
+checkcpupercentage 32324
+checkresidentmemory 32324
+pwd
+date
+listFiles

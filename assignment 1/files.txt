@@ -1,7 +1,7 @@
 a.out
-break1
 checkcpupercentage
 checkcpupercentage.c
+commands.txt
 files.txt
 makefile
 myshell

@@ -338,18 +338,28 @@ int main()
                 char *str1Tokens[5];
                 tokenizeCommandsAndArguments(input, str1Tokens, NULL, NULL, 0);
 
-                
+                char *buffer=calloc(2000,sizeof(char));
+                int fd=open(str1Tokens[1],O_RDONLY);
+                if(fd<0){
+                    printf("​main: Illegal command or arguments​ \n");
+                }else{
 
-                ///printing tokens
-                ///*
-                int i = 0;
-                while (str1Tokens[i] != NULL)
-                {
-                    printf("%s\n", str1Tokens[i]);
-                    i++;
+                    int charCount=read(fd,buffer,2000);
+                        close(fd);
+                    //printf("buffer content is: %s \n", buffer);
+                    char *single_command;
+                    for (int i = 0; i < 2000; i++)
+                    {
+                        single_command = strsep(&buffer, "\n");
+
+                        if (single_command == NULL || strcmp(single_command,"")==0)
+                            break;
+
+                        executeCommand(single_command);
+
+                    }
+
                 }
-                //*/
-
 
             }
             else if(commaChecker(input)==0){
@@ -359,7 +369,7 @@ int main()
         }
         else
         {
-            printf("​ Illegal command or arguments​ \n");
+            printf("​Illegal command or arguments​ \n");
         }
     }
 
