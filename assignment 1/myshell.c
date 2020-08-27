@@ -53,62 +53,98 @@ void removeSpacesAndCreateTokens(char *tokensWithSpaces, char **finalTokens)
 }
 
 //Remove spacing in filestream
-void fileRemoveSpacesAndCreateTokens(char *filewithSpace, char *finalFile)
+void fileRemoveSpacesAndCreateTokens(char **filewithSpace, char **finalFile)
 {
 
-    finalFile = strsep(&filewithSpace, " ");
-    while (finalFile == NULL || (strcmp(finalFile, "") == 0))
+    if(filewithSpace[0]!=NULL)
     {
-        finalFile = strsep(&filewithSpace, " ");
+        finalFile[0] = strtok(filewithSpace[0], " ");
+        while (strcmp(finalFile[0], " ") == 0)
+        {
+            finalFile[0] = strtok(NULL, " ");
+        }
     }
+
+    if(filewithSpace[1]!=NULL)
+    {
+        finalFile[1] = strtok(filewithSpace[1], " ");
+        while (strcmp(finalFile[1], " ") == 0)
+        {
+            finalFile[1] = strtok(NULL, " ");
+        }
+    }
+    
+    //finalFile[0]="input test";
+    //finalFile[1]="output test";
+    //printf("fileRemoveSpacesAndCreateTokens: filewithSpace[0]:%s    filewithSpace[1]:%s\n",filewithSpace[0],filewithSpace[1]);
+    
 }
 
-void tokenizeCommandsAndArguments(char *icommand, char **str1Tokens, char *tempfile, char *file, int direction)
+void tokenizeCommandsAndArguments(char *icommand, char **str1Tokens, char **tempfile, char **file)
 {
-
     removeSpacesAndCreateTokens(icommand, str1Tokens);
-
-    if (direction != 0)
-    {
-        fileRemoveSpacesAndCreateTokens(tempfile, file);
-        //printf("file: %s \n tempfile:%s", file, tempfile);
-    }
+    fileRemoveSpacesAndCreateTokens(tempfile, file);
 }
 
 ///IO Parser for without Pipe  ---- 1 argument passed
-int checkIOParser(char *str1, char *file, char **str1Tokens)
+void checkIOParser(char *str1, char **file, char **str1Tokens)
 {
 
-    char *icommand = NULL, *tempfile = NULL;
-    int direction = 0; /// 1->output file is present 2->input file is present  0-> no I/O direction is present
+    char *icommand = NULL, *tempfile[2]={NULL,NULL};
+    char *in_checker=NULL,*out_checker=NULL;
 
-    if (strrchr(str1, '>') != NULL)
+
+    in_checker=strrchr(str1, '<');
+    out_checker=strrchr(str1, '>');
+
+    if(out_checker==NULL && in_checker==NULL)
     {
-        direction = 1;
-
-        icommand = strtok(str1, ">");
-        if (icommand != NULL)
-            tempfile = strtok(NULL, ">");
+        icommand=str1;
+        printf("icommand: %s\n",icommand);
     }
-    else if (strrchr(str1, '<') != NULL)
+    else if(in_checker!=NULL && out_checker==NULL)
     {
-        direction = 2;
-
-        icommand = strtok(str1, "<");
-        if (icommand != NULL)
-            tempfile = strtok(NULL, "<");
+        icommand=strtok(str1,"<");
+        tempfile[0]=strtok(NULL,"<");
+        printf("icommand: %s\n tempfile[0]: %s\n",icommand,tempfile[0]);
     }
-    else
+    else if(out_checker!=NULL && in_checker==NULL)
     {
-        icommand = str1;
+        icommand=strtok(str1,">");
+        tempfile[0]=strtok(NULL,">");
+        printf("icommand: %s\n tempfile[0]: %s\n",icommand,tempfile[0]);
+
+    }else
+    {
+        icommand=str1;
+
+        int len=strlen(out_checker)-strlen(in_checker);
+        printf("length : %d\n",len);
+        
+        if(len>0){
+            
+            icommand=strtok(str1,">");
+            char *temp=strtok(NULL,">");
+            tempfile[1]=strtok(temp,"<");
+            tempfile[0]=strtok(NULL,"<");
+            printf("icommand: %s\n temp: %s\n tempfile[0]: %s\n tempfile[1]: %s\n",icommand,temp,tempfile[0],tempfile[1]);
+
+        }
+        else
+        {
+            icommand=strtok(str1,"<");
+            char *temp=strtok(NULL,"<");
+            tempfile[0]=strtok(temp,">");
+            tempfile[1]=strtok(NULL,">");
+            printf("icommand: %s\n temp: %s\n tempfile[0]: %s\n tempfile[1]: %s\n",icommand,temp,tempfile[0],tempfile[1]);
+
+
+        }
     }
 
-    tokenizeCommandsAndArguments(icommand, str1Tokens, tempfile, file, direction);
+    tokenizeCommandsAndArguments(icommand, str1Tokens, tempfile, file);
+    //printf("executeCommands: file[0]:%s    file[1]:%s\n",file[0],file[1]);
 
-    //if (direction != 0)
-    //    printf("checkIOParser- icommand is: %s  \t file is: %s \n", icommand, file);
-
-    return direction;
 }
 
 //Execute individual commands after parsing it with ';' seperator
@@ -118,7 +154,6 @@ void executeCommand(char *str)
     //Check if pipe '|' is present in the command str and split accordingly into two seperate strings to be processed in pipe functionality
     char *str1 = NULL, *str2 = NULL;
     char *str1Tokens[200], *str2Tokens[200];
-    char *file = NULL;
 
     int customFlag=0; //to differntiate btw custom Listfiles ls and builtin ls...similarly for residentmemory and ps
 
@@ -129,10 +164,9 @@ void executeCommand(char *str)
 
     if (str2 == NULL)
     {
-
+        char *file[2]={NULL,NULL};
         //No Pipe is present. Perform execution using one child
-        //printf("executeCommand- Without pipe str1 is: %s \n", str1);
-        int direction = checkIOParser(str1, file, str1Tokens);
+        checkIOParser(str1, file, str1Tokens);
 
         //printf("executeCommand- direction is: %d \n", direction);
 
@@ -162,14 +196,17 @@ void executeCommand(char *str)
         }
 
         ///printing tokens
-        /*
+        
+        printf("Tokens are printed below:\n");
         int i = 0;
         while (str1Tokens[i] != NULL)
         {
             printf("%s\n", str1Tokens[i]);
             i++;
         }
-         */
+
+        printf("main: file[0]:%s    file[1]:%s\n",file[0],file[1]);
+        
 
         if (commandCheckerFlag == 1)
         {
@@ -206,7 +243,7 @@ void executeCommand(char *str)
                     dup2(fd, 1);
                     if (execvp(str1Tokens[0], str1Tokens) < 0)
                     {
-                        printf("​Child: Illegal command or arguments \n");
+                        printf("​Child: Illegal command or arguments\n");
                         exit(0);
                     }
                 }
@@ -218,7 +255,7 @@ void executeCommand(char *str)
                     str1Tokens[1]=NULL;
                     if (execvp(str1Tokens[0], str1Tokens) < 0)
                     {
-                        printf("​Child: Illegal command or arguments \n");
+                        printf("​Child: Illegal command or arguments\n");
                         exit(0);
                     }
 
@@ -227,7 +264,7 @@ void executeCommand(char *str)
                 //This is for checkcpupercentage and checkresidentmemory
                 if (execvp(str1Tokens[0], str1Tokens) < 0)
                 {
-                    printf("​Child: Illegal command or arguments \n");
+                    printf("​Child: Illegal command or arguments\n");
                     exit(0);
                 }
             }
@@ -238,7 +275,11 @@ void executeCommand(char *str)
             }
             //runCustomCommands(str1Tokens, file, direction);
         }
+    }else
+    {
+        printf("Pipe Found \n string1 : %s \n string2 : %s\n", str1, str2);
     }
+    
 }
 
 //Custom Command Pipe Execution
@@ -296,6 +337,7 @@ int commaChecker(char *input)
     return 0;
 }
 
+// Signal Handler for SIGINT
 void sigint_handler(int sig){
 
     printf("​\nthe program is interrupted, do you want to exit [Y/N]");
@@ -315,6 +357,7 @@ void sigint_handler(int sig){
     }
 }
 
+// Signal Handler for SIGTERM
 void sigterm_handler(int sig){
     printf("​\nGot SIGTERM-Leaving\n");
     kill(getpid(),SIGKILL);
@@ -381,7 +424,7 @@ int main()
 
             if(strcmp(first_command,"executeCommands")==0){
                 char *str1Tokens[5];
-                tokenizeCommandsAndArguments(input, str1Tokens, NULL, NULL, 0);
+                tokenizeCommandsAndArguments(input, str1Tokens, NULL, NULL);
                 
                 // Characters to read
                 int buffer_size=5000;
