@@ -85,11 +85,11 @@ int main(int argc, char *argv[]){
     close(fdcpu);
 
     long long int ttime_diff=totaltime[1]-totaltime[0];
-    long double utime_percentage= (utime[1]-utime[0])*cores*100/ttime_diff;
-    long double stime_percentage= (stime[1]-stime[0])*cores*100/ttime_diff;
+    long double utime_percentage= ((utime[1]-utime[0])*cores*100)/ttime_diff;
+    long double stime_percentage= ((stime[1]-stime[0])*cores*100)/ttime_diff;
 
-    printf("user mode cpu percentage: %ld%%\n",(long int)utime_percentage);
-    printf("system mode cpu percentage: %ld%%\n",(long int)stime_percentage);
+    printf("user mode cpu percentage: %0.2Lf%%\n",utime_percentage);
+    printf("system mode cpu percentage: %0.2Lf%%\n",stime_percentage);
 
 
     return 0;

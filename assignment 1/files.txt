@@ -3,8 +3,10 @@ checkcpupercentage
 checkcpupercentage.c
 commands.txt
 files.txt
+input.txt
 makefile
 myshell
 myshell.c
+output.txt
 Problem Statement.pdf
 references.txt

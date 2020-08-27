@@ -73,11 +73,7 @@ void fileRemoveSpacesAndCreateTokens(char **filewithSpace, char **finalFile)
             finalFile[1] = strtok(NULL, " ");
         }
     }
-    
-    //finalFile[0]="input test";
-    //finalFile[1]="output test";
-    //printf("fileRemoveSpacesAndCreateTokens: filewithSpace[0]:%s    filewithSpace[1]:%s\n",filewithSpace[0],filewithSpace[1]);
-    
+ 
 }
 
 void tokenizeCommandsAndArguments(char *icommand, char **str1Tokens, char **tempfile, char **file)
@@ -100,26 +96,24 @@ void checkIOParser(char *str1, char **file, char **str1Tokens)
     if(out_checker==NULL && in_checker==NULL)
     {
         icommand=str1;
-        printf("icommand: %s\n",icommand);
+        //printf("icommand: %s\n",icommand);
     }
     else if(in_checker!=NULL && out_checker==NULL)
     {
         icommand=strtok(str1,"<");
         tempfile[0]=strtok(NULL,"<");
-        printf("icommand: %s\n tempfile[0]: %s\n",icommand,tempfile[0]);
+        //printf("icommand: %s\n tempfile[0]: %s\n",icommand,tempfile[0]);
     }
     else if(out_checker!=NULL && in_checker==NULL)
     {
         icommand=strtok(str1,">");
-        tempfile[0]=strtok(NULL,">");
-        printf("icommand: %s\n tempfile[0]: %s\n",icommand,tempfile[0]);
+        tempfile[1]=strtok(NULL,">");
+        //printf("icommand: %s\n tempfile[1]: %s\n",icommand,tempfile[1]);
 
     }else
     {
-        icommand=str1;
-
         int len=strlen(out_checker)-strlen(in_checker);
-        printf("length : %d\n",len);
+        //printf("length : %d\n",len);
         
         if(len>0){
             
@@ -127,7 +121,7 @@ void checkIOParser(char *str1, char **file, char **str1Tokens)
             char *temp=strtok(NULL,">");
             tempfile[1]=strtok(temp,"<");
             tempfile[0]=strtok(NULL,"<");
-            printf("icommand: %s\n temp: %s\n tempfile[0]: %s\n tempfile[1]: %s\n",icommand,temp,tempfile[0],tempfile[1]);
+            //printf("icommand: %s\n temp: %s\n tempfile[0]: %s\n tempfile[1]: %s\n",icommand,temp,tempfile[0],tempfile[1]);
 
         }
         else
@@ -136,7 +130,7 @@ void checkIOParser(char *str1, char **file, char **str1Tokens)
             char *temp=strtok(NULL,"<");
             tempfile[0]=strtok(temp,">");
             tempfile[1]=strtok(NULL,">");
-            printf("icommand: %s\n temp: %s\n tempfile[0]: %s\n tempfile[1]: %s\n",icommand,temp,tempfile[0],tempfile[1]);
+            //printf("icommand: %s\n temp: %s\n tempfile[0]: %s\n tempfile[1]: %s\n",icommand,temp,tempfile[0],tempfile[1]);
 
 
         }
@@ -162,6 +156,8 @@ void executeCommand(char *str)
     if (str1 != NULL)
         str2 = strtok(NULL, "|");
 
+
+    // If no pipe/ grep is present
     if (str2 == NULL)
     {
         char *file[2]={NULL,NULL};
@@ -190,13 +186,13 @@ void executeCommand(char *str)
         }
         else if (strcmp(str1Tokens[0], "sortFile") == 0)
         {
-            //printf("sortFile code entered \n");
+            printf("sortFile code entered \n");
             str1Tokens[0] = "sort";
             str1Tokens[2] = NULL;
         }
 
         ///printing tokens
-        
+        /*
         printf("Tokens are printed below:\n");
         int i = 0;
         while (str1Tokens[i] != NULL)
@@ -204,9 +200,9 @@ void executeCommand(char *str)
             printf("%s\n", str1Tokens[i]);
             i++;
         }
+        */
+        //printf("main: file[0]:%s    file[1]:%s\n",file[0],file[1]);
 
-        printf("main: file[0]:%s    file[1]:%s\n",file[0],file[1]);
-        
 
         if (commandCheckerFlag == 1)
         {
@@ -216,7 +212,6 @@ void executeCommand(char *str)
         else
         {
             //printf("run custom command or executable command \n");
-
             if (commandCheckerFlag==2 && strcmp(str1Tokens[0], "checkcpupercentage") == 0)
             {
                 // Concatinating ./ to the first argument to make it executable custom command
@@ -224,6 +219,7 @@ void executeCommand(char *str)
                 strcat(a, str1Tokens[0]);
                 str1Tokens[0] = a;
             }
+
 
             pid_t pid = fork();
             if (pid == -1) {
@@ -235,6 +231,29 @@ void executeCommand(char *str)
             if (pid == 0)
             {
                 //child process
+
+
+                int fd_input, fd_output;
+                //Checking if I/O are present and change input and output file descriptors accordingly.
+                //Input filestream
+                if(file[0]!=NULL){
+                    fd_input=open(file[0],O_RDONLY);
+                    fflush(stdin);
+                    if(fd_input>0){
+                        dup2(fd_input,0);
+                        //printf("Input stream dupped with integer: %d\n",fd_input);
+                    }
+                }
+                
+                //Output filestream
+                if(file[1]!=NULL){
+                    fd_output=open(file[1], O_WRONLY| O_CREAT | O_TRUNC, 0666);
+                    fflush(stdout);
+                    if(fd_output>0){
+                        dup2(fd_output,1);
+                        //printf("Output stream dupped with integer: %d\n",fd_output);
+                    }
+                }
 
                 //This is for listFiles command
                 if (strcmp(str1Tokens[0], "ls") == 0 && commandCheckerFlag==2)
