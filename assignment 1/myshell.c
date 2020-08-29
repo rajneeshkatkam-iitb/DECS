@@ -33,10 +33,6 @@ int CommandsChecker(char *command)
     return 0;
 }
 
-//IO Parser for with Pipe ---- 2 arguments passed
-void checkIOParserPipe(char *str1, char *str2)
-{
-}
 
 //Remove spacing in commands
 void removeSpacesAndCreateTokens(char *tokensWithSpaces, char **finalTokens)
@@ -55,6 +51,8 @@ void removeSpacesAndCreateTokens(char *tokensWithSpaces, char **finalTokens)
 //Remove spacing in filestream
 void fileRemoveSpacesAndCreateTokens(char **filewithSpace, char **finalFile)
 {
+    if(filewithSpace ==NULL)
+        return;
 
     if(filewithSpace[0]!=NULL)
     {
@@ -141,35 +139,8 @@ void checkIOParser(char *str1, char **file, char **str1Tokens)
 
 }
 
-//Execute individual commands after parsing it with ';' seperator
-void executeCommand(char *str)
-{
-
-    //Check if pipe '|' is present in the command str and split accordingly into two seperate strings to be processed in pipe functionality
-    char *str1 = NULL, *str2 = NULL;
-    char *str1Tokens[200], *str2Tokens[200];
-
-    int customFlag=0; //to differntiate btw custom Listfiles ls and builtin ls...similarly for residentmemory and ps
-
-    str1 = strtok(str, "|");
-
-    if (str1 != NULL)
-        str2 = strtok(NULL, "|");
-
-
-    // If no pipe/ grep is present
-    if (str2 == NULL)
-    {
-        char *file[2]={NULL,NULL};
-        //No Pipe is present. Perform execution using one child
-        checkIOParser(str1, file, str1Tokens);
-
-        //printf("executeCommand- direction is: %d \n", direction);
-
-        // //check str1Tokens[0] with custom commands. If not present then execvp...if it throws errors, then you through Illegal commands error
-        int commandCheckerFlag = CommandsChecker(str1Tokens[0]);
-
-        if (strcmp(str1Tokens[0], "checkresidentmemory") == 0)
+void checkCustomCommands(char **str1Tokens){
+    if (strcmp(str1Tokens[0], "checkresidentmemory") == 0)
         {
             //printf("checkresidentmemory code entered \n");
             str1Tokens[0] = "ps";
@@ -186,10 +157,39 @@ void executeCommand(char *str)
         }
         else if (strcmp(str1Tokens[0], "sortFile") == 0)
         {
-            printf("sortFile code entered \n");
+            //printf("sortFile code entered \n");
             str1Tokens[0] = "sort";
             str1Tokens[2] = NULL;
         }
+
+}
+
+//Execute individual commands after parsing it with ';' seperator
+void executeCommand(char *str)
+{
+
+    //Check if pipe '|' is present in the command str and split accordingly into two seperate strings to be processed in pipe functionality
+    char *str1 = NULL, *str2 = NULL;
+    char *str1Tokens[200], *str2Tokens[200];
+
+    str1 = strtok(str, "|");
+
+    if (str1 != NULL)
+        str2 = strtok(NULL, "|");
+
+
+    // If no pipe/ grep is present
+    if (str2 == NULL)
+    {
+        char *file[2]={NULL,NULL};
+        //No Pipe is present. Perform execution using one child
+        checkIOParser(str1, file, str1Tokens);
+
+        //check str1Tokens[0] with custom commands. If not present then execvp...if it throws errors, then you through Illegal commands error
+        int commandCheckerFlag = CommandsChecker(str1Tokens[0]);
+
+        checkCustomCommands(str1Tokens);
+
 
         ///printing tokens
         /*
@@ -208,6 +208,8 @@ void executeCommand(char *str)
         {
             // runBuiltIn(str1Tokens, file, direction);
             printf("run builtin command \n");
+            // char *args[]={"cd","..",NULL};
+            // chdir("..");
         }
         else
         {
@@ -280,6 +282,7 @@ void executeCommand(char *str)
 
                 }
 
+                
                 //This is for checkcpupercentage and checkresidentmemory
                 if (execvp(str1Tokens[0], str1Tokens) < 0)
                 {
@@ -292,13 +295,55 @@ void executeCommand(char *str)
                 //parent process
                 wait(NULL);
             }
-            //runCustomCommands(str1Tokens, file, direction);
+
         }
     }else
     {
         printf("Pipe Found \n string1 : %s \n string2 : %s\n", str1, str2);
+
+        char *file1[2]={NULL,NULL};
+        char *file2[2]={NULL,NULL};
+        //  Pipe is present. Perform execution using two child
+        checkIOParser(str1, file1, str1Tokens);
+        checkIOParser(str2, file2, str2Tokens);
+
+        //check str1Tokens[0] with custom commands. If not present then execvp...if it throws errors, then you through Illegal commands error
+        int commandCheckerFlag = CommandsChecker(str1Tokens[0]);
+
+        checkCustomCommands(str1Tokens);
+        checkCustomCommands(str2Tokens);
+
+
+        if (commandCheckerFlag == 1)
+        {
+            // runBuiltIn(str1Tokens, file, direction);
+            printf("run builtin command \n");
+            // char *args[]={"cd","..",NULL};
+            // chdir("..");
+        }
+        else
+        {
+            //printf("run custom command or executable command \n");
+            if (commandCheckerFlag==2 && strcmp(str1Tokens[0], "checkcpupercentage") == 0)
+            {
+                // Concatinating ./ to the first argument to make it executable custom command
+                char a[100] = "./";
+                strcat(a, str1Tokens[0]);
+                str1Tokens[0] = a;
+            }
+
+            // pid_t pid = fork();
+            // if (pid == -1) {
+            //     perror("fork failed");
+            //     exit(1);
+            // }
+
+
+        }
+
+        
     }
-    
+  
 }
 
 //Custom Command Pipe Execution
@@ -359,7 +404,7 @@ int commaChecker(char *input)
 // Signal Handler for SIGINT
 void sigint_handler(int sig){
 
-    printf("​\nthe program is interrupted, do you want to exit [Y/N]");
+    printf("​\nthe program is interrupted, do you want to exit [Y/N] ");
     fflush(stdout);
     fflush(stdin);
     char *buffer=calloc(100,sizeof(char));
