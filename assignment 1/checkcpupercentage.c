@@ -56,6 +56,7 @@ int main(int argc, char *argv[]){
 
     char filename[200]="/proc/";
     strcat(filename,argv[1]);
+    //printf("checkcpupercentage: argv[1]: %s \n",argv[1]);
     strcat(filename,"/stat");
     int fd=open(filename, O_RDONLY);
     int fdcpu=open("/proc/stat",O_RDONLY);
