@@ -15,19 +15,21 @@ static int builtinCount = 3;
 // 0->Not builtin or custom. 1->builtin. 2->custom
 int CommandsChecker(char *command)
 {
-
-    //builtin commands checker
-    for (int i = 0; i < builtinCount; i++)
+    if(command!=NULL)
     {
-        if (strcmp(command, builtinCommands[i]) == 0)
-            return 1;
-    }
+        //builtin commands checker
+        for (int i = 0; i < builtinCount; i++)
+        {
+            if (strcmp(command, builtinCommands[i]) == 0)
+                return 1;
+        }
 
-    //custom commands checker
-    for (int i = 0; i < commantCount; i++)
-    {
-        if (strcmp(command, customCommands[i]) == 0)
-            return 2;
+        //custom commands checker
+        for (int i = 0; i < commantCount; i++)
+        {
+            if (strcmp(command, customCommands[i]) == 0)
+                return 2;
+        }
     }
 
     return 0;
@@ -82,55 +84,59 @@ void tokenizeCommandsAndArguments(char *icommand, char **str1Tokens, char **temp
 void checkIOParser(char *str1, char **file, char **str1Tokens)
 {
 
-    char *icommand = NULL, *tempfile[2] = {NULL, NULL};
-    char *in_checker = NULL, *out_checker = NULL;
+    if(str1!=NULL)
+    {
+        char *icommand = NULL, *tempfile[2] = {NULL, NULL};
+        char *in_checker = NULL, *out_checker = NULL;
 
-    in_checker = strrchr(str1, '<');
-    out_checker = strrchr(str1, '>');
+        in_checker = strrchr(str1, '<');
+        out_checker = strrchr(str1, '>');
 
-    if (out_checker == NULL && in_checker == NULL)
-    {
-        icommand = str1;
-        //printf("icommand: %s\n",icommand);
-    }
-    else if (in_checker != NULL && out_checker == NULL)
-    {
-        icommand = strtok(str1, "<");
-        tempfile[0] = strtok(NULL, "<");
-        //printf("icommand: %s\n tempfile[0]: %s\n",icommand,tempfile[0]);
-    }
-    else if (out_checker != NULL && in_checker == NULL)
-    {
-        icommand = strtok(str1, ">");
-        tempfile[1] = strtok(NULL, ">");
-        //printf("icommand: %s\n tempfile[1]: %s\n",icommand,tempfile[1]);
-    }
-    else
-    {
-        int len = strlen(out_checker) - strlen(in_checker);
-        //printf("length : %d\n",len);
-
-        if (len > 0)
+        if (out_checker == NULL && in_checker == NULL)
         {
-
-            icommand = strtok(str1, ">");
-            char *temp = strtok(NULL, ">");
-            tempfile[1] = strtok(temp, "<");
+            icommand = str1;
+            //printf("icommand: %s\n",icommand);
+        }
+        else if (in_checker != NULL && out_checker == NULL)
+        {
+            icommand = strtok(str1, "<");
             tempfile[0] = strtok(NULL, "<");
-            //printf("icommand: %s\n temp: %s\n tempfile[0]: %s\n tempfile[1]: %s\n",icommand,temp,tempfile[0],tempfile[1]);
+            //printf("icommand: %s\n tempfile[0]: %s\n",icommand,tempfile[0]);
+        }
+        else if (out_checker != NULL && in_checker == NULL)
+        {
+            icommand = strtok(str1, ">");
+            tempfile[1] = strtok(NULL, ">");
+            //printf("icommand: %s\n tempfile[1]: %s\n",icommand,tempfile[1]);
         }
         else
         {
-            icommand = strtok(str1, "<");
-            char *temp = strtok(NULL, "<");
-            tempfile[0] = strtok(temp, ">");
-            tempfile[1] = strtok(NULL, ">");
-            //printf("icommand: %s\n temp: %s\n tempfile[0]: %s\n tempfile[1]: %s\n",icommand,temp,tempfile[0],tempfile[1]);
-        }
-    }
+            int len = strlen(out_checker) - strlen(in_checker);
+            //printf("length : %d\n",len);
 
-    tokenizeCommandsAndArguments(icommand, str1Tokens, tempfile, file);
-    //printf("executeCommands: file[0]:%s    file[1]:%s\n",file[0],file[1]);
+            if (len > 0)
+            {
+
+                icommand = strtok(str1, ">");
+                char *temp = strtok(NULL, ">");
+                tempfile[1] = strtok(temp, "<");
+                tempfile[0] = strtok(NULL, "<");
+                //printf("icommand: %s\n temp: %s\n tempfile[0]: %s\n tempfile[1]: %s\n",icommand,temp,tempfile[0],tempfile[1]);
+            }
+            else
+            {
+                icommand = strtok(str1, "<");
+                char *temp = strtok(NULL, "<");
+                tempfile[0] = strtok(temp, ">");
+                tempfile[1] = strtok(NULL, ">");
+                //printf("icommand: %s\n temp: %s\n tempfile[0]: %s\n tempfile[1]: %s\n",icommand,temp,tempfile[0],tempfile[1]);
+            }
+        }
+
+        tokenizeCommandsAndArguments(icommand, str1Tokens, tempfile, file);
+        //printf("executeCommands: file[0]:%s    file[1]:%s\n",file[0],file[1]);
+
+    }
 }
 
 void checkCustomCommands(char **str1Tokens)
@@ -227,7 +233,7 @@ void executeCommand(char *str)
                     {
                         if(dup2(fd_input, 0)==-1){
                             printf("error in duplication");
-                        };
+                        }
                         //printf("Input stream dupped with integer: %d\n",fd_input);
                         close(fd_input);
 
@@ -242,7 +248,6 @@ void executeCommand(char *str)
                         }
                     }
 
-
                 }
 
                 //Output filestream
@@ -255,6 +260,7 @@ void executeCommand(char *str)
                         dup2(fd_output, 1);
                         //printf("Output stream dupped with integer: %d\n",fd_output);
                     }
+                    close(fd_output);
                 }
 
                 //printf("run custom command or executable command \n");
@@ -280,11 +286,13 @@ void executeCommand(char *str)
                 //This is for listFiles command
                 if (strcmp(str1Tokens[0], "ls") == 0 && commandCheckerFlag == 2)
                 {
+                    int fd;
                     if(file[1]==NULL)
                     {
                         //printf("file[1] is null. \n");
-                        int fd = open("files.txt", O_WRONLY | O_CREAT | O_TRUNC, 0666);
+                        fd = open("files.txt", O_WRONLY | O_CREAT | O_TRUNC, 0666);
                         dup2(fd, 1);
+                        close(fd);
                     }
                     if (execvp(str1Tokens[0], str1Tokens) < 0)
                     { 
@@ -304,20 +312,28 @@ void executeCommand(char *str)
                     }
                      
                     dup2(fd, 0);
+                    close(fd);
+                    
                     str1Tokens[1] = NULL;
                     if (execvp(str1Tokens[0], str1Tokens) < 0)
                     {
                         printf("​Child: Illegal command or arguments\n");
-                        exit(0);
+                        exit(1);
                     }
                 }
 
+                
+
                 if (strcmp(str1Tokens[0], "ps") == 0 && commandCheckerFlag == 2 && file[0]!=NULL){
-                    int fd = open(str1Tokens[3], O_RDONLY);
-                    char io_input[100];
-                    scanf("%s", io_input);
+                    //printf("Entered ps for file[0]\n");
+                    int fd = open(file[0], O_RDONLY);
+                    dup2(fd,0);
                     close(fd);
+                    
+                    char *io_input=(char *)calloc(100,sizeof(char));
+                    scanf("%s", io_input);
                     str1Tokens[3]=io_input;
+                    //printf("io_input is: %s\n",io_input);
 
                 }
 
@@ -353,6 +369,29 @@ void executeCommand(char *str)
         checkCustomCommands(str1Tokens);
         checkCustomCommands(str2Tokens);
 
+
+/*
+        printf("Tokens 1 are printed below:\n");
+        int i = 0;
+        while (str1Tokens[i] != NULL)
+        {
+            printf("%s\n", str1Tokens[i]);
+            i++;
+        }
+
+        printf("\n");
+
+        printf("Tokens 2 are printed below:\n");
+        i = 0;
+        while (str2Tokens[i] != NULL)
+        {
+            printf("%s\n", str2Tokens[i]);
+            i++;
+        }
+
+        printf("\n");
+*/
+
         if (commandCheckerFlag1 == 1)
         {
             // runBuiltIn(str1Tokens, file, direction);
@@ -362,14 +401,6 @@ void executeCommand(char *str)
         }
         else
         {
-            //printf("run custom command or executable command \n");
-            if (commandCheckerFlag1 == 2 && strcmp(str1Tokens[0], "checkcpupercentage") == 0)
-            {
-                // Concatinating ./ to the first argument to make it executable custom command
-                char a[100] = "./";
-                strcat(a, str1Tokens[0]);
-                str1Tokens[0] = a;
-            }
 
             int fdpipes[2];
 
@@ -386,9 +417,8 @@ void executeCommand(char *str)
             {
                 if (file1[1] == NULL)
                 {
-
-                    //dup2(fdpipes[1], 1);
-                    printf("pipes fdpipes[1] done..\n");
+                    dup2(fdpipes[1], 1);
+                    //printf("pipes fdpipes[1] done..\n");
                 }
 
                 int fd_input, fd_output;
@@ -396,12 +426,26 @@ void executeCommand(char *str)
                 //Input filestream
                 if (file1[0] != NULL)
                 {
-                    fd_input = open(file1[0], O_RDONLY);
+                    fd_input = open(file1[0], O_RDONLY, 0777);
                     fflush(stdin);
                     if (fd_input > 0)
                     {
-                        dup2(fd_input, 0);
+                        if(dup2(fd_input, 0)==-1){
+                            printf("error in duplication");
+                        }
                         //printf("Input stream dupped with integer: %d\n",fd_input);
+                        if(fd_input>=0)
+                            close(fd_input);
+
+                        if(commandCheckerFlag1!=2)
+                        {
+                            int i = 0;
+                            while (str1Tokens[i] != NULL)
+                                i++;
+                            
+                            str1Tokens[i]=file1[0];
+                            str1Tokens[i+1]=NULL;
+                        }
                     }
                 }
 
@@ -413,57 +457,99 @@ void executeCommand(char *str)
                     if (fd_output > 0)
                     {
                         dup2(fd_output, 1);
+                        close(fd_output);
                         //printf("Output stream dupped with integer: %d\n",fd_output);
+                    }
+                }
+
+
+                //printf("run custom command or executable command \n");
+                if (commandCheckerFlag1 == 2 && strcmp(str1Tokens[0], "checkcpupercentage") == 0)
+                {
+                    // Concatinating ./ to the first argument to make it executable custom command
+                    char a[100] = "./";
+                    strcat(a, str1Tokens[0]);
+                    str1Tokens[0] = a;
+
+                    char io_input[100];    
+                    if(file1[0]!=NULL){
+                        scanf("%s", io_input);
+
+                        int i = 0;
+                        while (str1Tokens[i] != NULL)
+                            i++;
+                        str1Tokens[i]=io_input;
+                        str1Tokens[i+1]=NULL;
                     }
                 }
 
                 //This is for listFiles command
                 if (strcmp(str1Tokens[0], "ls") == 0 && commandCheckerFlag1 == 2)
-                {
-                    int fd = open("files.txt", O_WRONLY | O_CREAT | O_TRUNC, 0666);
-                    dup2(fd, 1);
+                {   int fd;
+                    if(file1[1]==NULL)
+                    {
+                         fd = open("files.txt", O_WRONLY | O_CREAT | O_TRUNC, 0666);
+                        dup2(fd, 1);
+                        close(fd);
+                    }
                     if (execvp(str1Tokens[0], str1Tokens) < 0)
                     {
                         printf("Child Pipe 1: Illegal command or arguments\n");
-                        exit(0);
+                        exit(1);
                     }
                 }
 
                 if (strcmp(str1Tokens[0], "sort") == 0 && commandCheckerFlag1 == 2)
                 {
-
-                    int fd = open(str1Tokens[1], O_RDONLY);
+                    int fd;
+                    if(file1[0]!=NULL){
+                         fd = open(file1[0], O_RDONLY);
+                    }
+                    else{
+                        fd = open(str1Tokens[1], O_RDONLY);
+                    }  
                     dup2(fd, 0);
+                    close(fd);
+                    
                     str1Tokens[1] = NULL;
                     if (execvp(str1Tokens[0], str1Tokens) < 0)
                     {
                         printf("Child Pipe 1: Illegal command or arguments\n");
-                        exit(0);
+                        exit(1);
                     }
+                }
+
+                if (strcmp(str1Tokens[0], "ps") == 0 && commandCheckerFlag1 == 2 && file1[0]!=NULL){
+                    int fd = open(file1[0], O_RDONLY);
+                    dup2(fd,0);
+                    char io_input[100];
+                    scanf("%s", io_input);
+                    close(fd);
+                    str1Tokens[3]=io_input;
                 }
 
                 //This is for checkcpupercentage and checkresidentmemory
                 if (execvp(str1Tokens[0], str1Tokens) < 0)
                 {
                     printf("Child Pipe 1: Illegal command or arguments\n");
-                    exit(0);
+                    exit(1);
                 }
             }
             else
             {
                 wait(NULL);
                 close(fdpipes[1]);
+
+
+                // char std_output[100];
+                // read(fdpipes[0],std_output,100);
+                // printf("Pipes output is: %s \n",std_output);
+                
+                
+               
+                
                 if (file1[1] == NULL)
                 {
-
-                    //printf("run custom command or executable command \n");
-                    if (commandCheckerFlag2 == 2 && strcmp(str2Tokens[0], "checkcpupercentage") == 0)
-                    {
-                        // Concatinating ./ to the first argument to make it executable custom command
-                        char a[100] = "./";
-                        strcat(a, str2Tokens[0]);
-                        str2Tokens[0] = a;
-                    }
 
 
                     pid_t pid_pipe = fork();
@@ -479,20 +565,47 @@ void executeCommand(char *str)
                         if (file2[0] == NULL)
                         {
                             dup2(fdpipes[0], 0);
-                            printf("pipes fdpipes[0] done..\n");
+                            close(fdpipes[0]);
+
+                            /* if(commandCheckerFlag2!=2)
+                                {
+                                    char *a=(char *)calloc(3000,sizeof(char));
+                                    read(0,a,3000);
+                                    int i = 0;
+                                    while (str2Tokens[i] != NULL)
+                                        i++;
+                                    
+                                    str2Tokens[i]=a;
+                                    str2Tokens[i+1]=NULL;
+                                } */
+                            //printf("pipes fdpipes[0] done..\n");
                         }
+
 
                         int fd_input, fd_output;
                         //Checking if I/O are present and change input and output file descriptors accordingly.
                         //Input filestream
                         if (file2[0] != NULL)
                         {
-                            fd_input = open(file2[0], O_RDONLY);
+                            fd_input = open(file2[0], O_RDONLY), 0777;
                             fflush(stdin);
                             if (fd_input > 0)
                             {
-                                dup2(fd_input, 0);
+                                if(dup2(fd_input, 0)==-1){
+                                    printf("error in duplication");
+                                }
                                 //printf("Input stream dupped with integer: %d\n",fd_input);
+                                close(fd_input);
+                                if(commandCheckerFlag2!=2)
+                                {
+                                    int i = 0;
+                                    while (str2Tokens[i] != NULL)
+                                        i++;
+                                    
+                                    str2Tokens[i]=file2[0];
+                                    str2Tokens[i+1]=NULL;
+                                }
+                                
                             }
                         }
 
@@ -504,15 +617,43 @@ void executeCommand(char *str)
                             if (fd_output > 0)
                             {
                                 dup2(fd_output, 1);
+                                close(fd_output);
+                                printf("Pipe closed \n");
                                 //printf("Output stream dupped with integer: %d\n",fd_output);
                             }
                         }
 
+
+                        //printf("run custom command or executable command \n");
+                        if (commandCheckerFlag2 == 2 && strcmp(str2Tokens[0], "checkcpupercentage") == 0)
+                        {
+                            // Concatinating ./ to the first argument to make it executable custom command
+                            char a[100] = "./";
+                            strcat(a, str2Tokens[0]);
+                            str2Tokens[0] = a;
+
+                            char io_input[100];    
+                            scanf("%s", io_input);
+
+                            int i = 0;
+                            while (str1Tokens[i] != NULL)
+                                i++;
+                            str1Tokens[i]=io_input;
+                            str1Tokens[i+1]=NULL;
+                            
+                        }
+
+
                         //This is for listFiles command
                         if (strcmp(str2Tokens[0], "ls") == 0 && commandCheckerFlag2 == 2)
                         {
-                            int fd = open("files.txt", O_WRONLY | O_CREAT | O_TRUNC, 0666);
-                            dup2(fd, 1);
+                            int fd;
+                            if(file2[1]==NULL)
+                            {
+                                fd = open("files.txt", O_WRONLY | O_CREAT | O_TRUNC, 0666);
+                                dup2(fd, 1);
+                                close(fd);
+                            }
                             if (execvp(str2Tokens[0], str2Tokens) < 0)
                             {
                                 printf("​Child Pipe 2: Illegal command or arguments\n");
@@ -520,12 +661,19 @@ void executeCommand(char *str)
                             }
                         }
 
+
+
                         if (strcmp(str2Tokens[0], "sort") == 0 && commandCheckerFlag2 == 2)
                         {
-
-                            int fd = open(str2Tokens[1], O_RDONLY);
-                            dup2(fd, 0);
-                            str2Tokens[1] = NULL;
+                            int fd;
+                            if(file2[0]!=NULL){
+                                fd = open(file2[0], O_RDONLY);
+                                dup2(fd, 0);
+                                close(fd);
+                            }
+                            char *io_input=(char *)calloc(3000,sizeof(char));
+                            read(0,io_input,3000);
+                            str2Tokens[1] = io_input;
                             if (execvp(str2Tokens[0], str2Tokens) < 0)
                             {
                                 printf("Child Pipe 2: Illegal command or arguments\n");
@@ -533,6 +681,33 @@ void executeCommand(char *str)
                             }
                         }
 
+                        if (strcmp(str2Tokens[0], "ps") == 0 && commandCheckerFlag2 == 2){
+                            printf("Entered ps for 2nd child\n");
+                            int fd;
+                            if(file2[0]!=NULL)
+                            {
+                                fd = open(file2[0], O_RDONLY);
+                                dup2(fd,0);
+                                close(fd);
+                            }
+                            char *io_input=(char *)calloc(100,sizeof(char));
+                            scanf("%s", io_input);
+                            close(fd);
+                            str2Tokens[3]=io_input;
+                            printf("io_input is: %s\n",io_input);
+                        }
+
+                        /*
+                        printf("Tokens are printed below:\n");
+                        int i = 0;
+                        while (str2Tokens[i] != NULL)
+                        {
+                            printf("%s\n", str2Tokens[i]);
+                            i++;
+                        }
+                        */
+                            
+                        //char *args[]={"grep","tommy",NULL};
                         //This is for checkcpupercentage and checkresidentmemory
                         if (execvp(str2Tokens[0], str2Tokens) < 0)
                         {
@@ -544,9 +719,10 @@ void executeCommand(char *str)
                     }else
                     {
                         wait(NULL);
+                        close(fdpipes[0]);
                     }
                     
-                }
+                }  
             }
         }
     }
@@ -616,7 +792,7 @@ void sigint_handler(int sig)
     printf("​\nthe program is interrupted, do you want to exit [Y/N] ");
     fflush(stdout);
     fflush(stdin);
-    char *buffer = calloc(100, sizeof(char));
+    char *buffer = (char *)calloc(100, sizeof(char));
     read(0, buffer, 100);
 
     //printf("​ the pid is: %d and  buffer string is : %s", getpid(),first_command);
@@ -708,7 +884,7 @@ int main()
                 // Characters to read
                 int buffer_size = 5000;
 
-                char *buffer = calloc(buffer_size, sizeof(char));
+                char *buffer = (char *)calloc(buffer_size, sizeof(char));
                 int fd = open(str1Tokens[1], O_RDONLY);
                 if (fd < 0)
                 {

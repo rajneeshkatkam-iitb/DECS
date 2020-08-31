@@ -1,4 +1,3 @@
-Pipe closed 
 a.out
 checkcpupercentage
 checkcpupercentage.c
