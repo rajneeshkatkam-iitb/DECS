@@ -1,1 +1,2 @@
-765784
+user mode cpu percentage: 83.00%
+system mode cpu percentage: 12.00%

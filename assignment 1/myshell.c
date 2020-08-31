@@ -133,6 +133,7 @@ void checkIOParser(char *str1, char **file, char **str1Tokens)
             }
         }
 
+        //printf("io direction parsing completed \n");
         tokenizeCommandsAndArguments(icommand, str1Tokens, tempfile, file);
         //printf("executeCommands: file[0]:%s    file[1]:%s\n",file[0],file[1]);
 
@@ -164,6 +165,77 @@ void checkCustomCommands(char **str1Tokens)
     }
 }
 
+
+void doubleQuotesRemovalFromTokens(char **strToken){
+    for (int i = 0; i < 200; i++)
+    {
+        if(strToken[i]==NULL)
+            return;
+
+        if(strToken[i][0]=='"')
+        {
+            //printf("Before %d: %s \t",i,strToken[i]);
+            strToken[i]=&strToken[i][1];
+            int j=1;
+            while(strToken[i][j]!='"')
+            {
+                if(strToken[i][j]=='\0')
+                    break;
+
+                j++;
+            }
+            if(strToken[i][j]=='"')
+                strToken[i][j]='\0';
+           //printf("After %d: %s \n",i,strToken[i]);
+        }
+    }
+
+}
+
+void fileDoubleQuotesRemovalFromTokens(char **file){
+
+    if(file[0]!=NULL)
+    {
+        if(file[0][0]=='"')
+        {
+            //printf("File[0] Before: %s \t",file[0]);
+            file[0]=&file[0][1];
+            int j=1;
+            while(file[0][j]!='"')
+            {
+                if(file[0][j]=='\0')
+                    break;
+
+                j++;
+            }
+            if(file[0][j]=='"')
+                file[0][j]='\0';
+            //printf("File[0] After: %s \n",file[0]);
+        }
+    }
+
+    if(file[1]!=NULL)
+    {
+        if(file[1][0]=='"')
+        {
+            printf("File[1] Before: %s \t",file[1]);
+            file[1]=&file[1][1];
+            int j=1;
+            while(file[1][j]!='"')
+            {
+                if(file[1][j]=='\0')
+                    break;
+
+                j++;
+            }
+            if(file[1][j]=='"')
+                file[1][j]='\0';
+            printf("File[1] After: %s \n",file[1]);
+        }
+    }
+
+}
+
 //Execute individual commands after parsing it with ';' seperator
 void executeCommand(char *str)
 {
@@ -175,7 +247,15 @@ void executeCommand(char *str)
     str1 = strtok(str, "|");
 
     if (str1 != NULL)
+    {
         str2 = strtok(NULL, "|");
+        // if(strcmp(str2," ")|| strcmp(str2,"")==0 || strcmp(str2,"\n")==0)
+        // {
+        //     printf("​executeCommand: Illegal command or arguments\n");
+        //     return;
+        // }
+            
+    }    
 
     // If no pipe/ grep is present
     if (str2 == NULL)
@@ -183,6 +263,15 @@ void executeCommand(char *str)
         char *file[2] = {NULL, NULL};
         //No Pipe is present. Perform execution using one child
         checkIOParser(str1, file, str1Tokens);
+
+        if(str1Tokens[0]==NULL)
+        {
+            printf("Null strtoken1 Child: Illegal command or arguments\n");
+            return;
+        }
+
+        doubleQuotesRemovalFromTokens(str1Tokens);
+        fileDoubleQuotesRemovalFromTokens(file);
 
         //check str1Tokens[0] with custom commands. If not present then execvp...if it throws errors, then you through Illegal commands error
         int commandCheckerFlag = CommandsChecker(str1Tokens[0]);
@@ -354,13 +443,25 @@ void executeCommand(char *str)
     }
     else
     {
-        printf("Pipe Found \n string1 : %s \n string2 : %s\n", str1, str2);
+        //printf("Pipe Found \n string1 : %s \n string2 : %s\n", str1, str2);
 
         char *file1[2] = {NULL, NULL};
         char *file2[2] = {NULL, NULL};
         //  Pipe is present. Perform execution using two child
         checkIOParser(str1, file1, str1Tokens);
         checkIOParser(str2, file2, str2Tokens);
+        
+        if(str1Tokens[0]==NULL || str2Tokens[0]==NULL)
+        {
+            printf("Null Child Pipe 1: Illegal command or arguments\n");
+            return;
+        }
+
+        doubleQuotesRemovalFromTokens(str1Tokens);
+        fileDoubleQuotesRemovalFromTokens(file1);
+        doubleQuotesRemovalFromTokens(str2Tokens);
+        fileDoubleQuotesRemovalFromTokens(file2);
+
 
         //check str1Tokens[0] with custom commands. If not present then execvp...if it throws errors, then you through Illegal commands error
         int commandCheckerFlag1 = CommandsChecker(str1Tokens[0]);
@@ -870,51 +971,63 @@ int main()
                 first_command = strtok(input_copy, " ");
             }
 
-            //printf("first command is:%s \n", first_command);
-
-            //If input cmd is "exit", then exit the program without executing further
-            if (strcmp(first_command, "exit") == 0)
-                return 0;
-
-            if (strcmp(first_command, "executeCommands") == 0)
+            if(first_command!=NULL)
             {
-                char *str1Tokens[5];
-                tokenizeCommandsAndArguments(input, str1Tokens, NULL, NULL);
 
-                // Characters to read
-                int buffer_size = 5000;
+                //printf("first command is:%s \n", first_command);
 
-                char *buffer = (char *)calloc(buffer_size, sizeof(char));
-                int fd = open(str1Tokens[1], O_RDONLY);
-                if (fd < 0)
+                //If input cmd is "exit", then exit the program without executing further
+                if (strcmp(first_command, "exit") == 0 || strcmp(first_command, "\"exit\"") == 0)
+                    return 0;
+
+                if (strcmp(first_command, "executeCommands") == 0)
                 {
-                    printf("​main: Illegal command or arguments​ \n");
-                }
-                else
-                {
+                    char *str1Tokens[5];
+                    tokenizeCommandsAndArguments(input, str1Tokens, NULL, NULL);
 
-                    int charCount = read(fd, buffer, buffer_size);
-                    close(fd);
-                    //printf("buffer content is: %s \n", buffer);
-                    char *single_command;
-                    for (int i = 0; i < buffer_size; i++)
+                    // Characters to read
+                    int buffer_size = 5000;
+
+                    char *buffer = (char *)calloc(buffer_size, sizeof(char));
+                    int fd = open(str1Tokens[1], O_RDONLY);
+                    if (fd < 0)
                     {
-                        single_command = strsep(&buffer, "\n");
+                        printf("​main: Illegal command or arguments​ \n");
+                    }
+                    else
+                    {
 
-                        if (single_command == NULL || strcmp(single_command, "") == 0)
-                            break;
-
-                        if (commaChecker(single_command) == 0)
+                        int charCount = read(fd, buffer, buffer_size);
+                        close(fd);
+                        //printf("buffer content is: %s \n", buffer);
+                        char *single_command;
+                        for (int i = 0; i < buffer_size; i++)
                         {
-                            executeCommand(single_command);
+                            single_command = strsep(&buffer, "\n");
+
+                            if (single_command == NULL || strcmp(single_command, "") == 0)
+                                break;
+
+                            if (commaChecker(single_command) == 0)
+                            {
+                                executeCommand(single_command);
+                            }
                         }
                     }
                 }
+                else if (commaChecker(input) == 0)
+                {
+                    executeCommand(input);
+                }
+
+
             }
-            else if (commaChecker(input) == 0)
+            else
             {
-                executeCommand(input);
+                printf("​Illegal command or arguments​ \n");
             }
+          
+
         }
         else
         {
