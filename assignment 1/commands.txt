@@ -1,7 +1,7 @@
 ps -a
 ls
-checkresidentmemory 13100
-pwd ; checkcpupercentage 13100
+checkresidentmemory 5233
+pwd ; checkcpupercentage 5233
 date
 listFiles
 sortFile <input.txt >output.txt

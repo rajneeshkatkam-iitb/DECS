@@ -1,15 +1,1 @@
-30260
-files.txt
-rja
-basant tommy
-sdk
-xavie
-parsi
-common
-what a play
-ceer
-tommy
-siddhu tommy
-cricket
-qwetcha
-a.out
+user mode cpu percentage: 88.10%

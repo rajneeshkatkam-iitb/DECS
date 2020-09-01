@@ -266,7 +266,7 @@ void executeCommand(char *str)
 
         if(str1Tokens[0]==NULL)
         {
-            printf("Null strtoken1 Child: Illegal command or arguments\n");
+            printf("Illegal command or arguments\n");
             return;
         }
 
@@ -304,7 +304,9 @@ void executeCommand(char *str)
             //This is for checkcpupercentage and checkresidentmemory
             if (strcmp(str1Tokens[0],"cd")==0)
             {
-                chdir(str1Tokens[1]);
+                if (chdir(str1Tokens[1]) != 0){
+                    printf("Illegal command or arguments\n");
+                }
             }
             else if (strcmp(str1Tokens[0],"exit")==0)
             {
@@ -404,7 +406,7 @@ void executeCommand(char *str)
                     }
                     if (execvp(str1Tokens[0], str1Tokens) < 0)
                     { 
-                        printf("​Child: Illegal command or arguments\n");
+                        printf("​Illegal command or arguments\n");
                         exit(1);
                     }
                 }
@@ -425,7 +427,7 @@ void executeCommand(char *str)
                     str1Tokens[1] = NULL;
                     if (execvp(str1Tokens[0], str1Tokens) < 0)
                     {
-                        printf("​Child: Illegal command or arguments\n");
+                        printf("​Illegal command or arguments\n");
                         exit(1);
                     }
                 }
@@ -449,7 +451,7 @@ void executeCommand(char *str)
                 //This is for checkcpupercentage and checkresidentmemory
                 if (execvp(str1Tokens[0], str1Tokens) < 0)
                 {
-                    printf("​Child: Illegal command or arguments\n");
+                    printf("​Illegal command or arguments\n");
                     exit(1);
                 }
             }
@@ -472,7 +474,7 @@ void executeCommand(char *str)
         
         if(str1Tokens[0]==NULL || str2Tokens[0]==NULL)
         {
-            printf("Null Child Pipe 1: Illegal command or arguments\n");
+            printf("Illegal command or arguments\n");
             return;
         }
 
@@ -517,7 +519,9 @@ void executeCommand(char *str)
             // runBuiltIn(str1Tokens, file, direction);
             if (strcmp(str1Tokens[0],"cd")==0)
             {
-                chdir(str1Tokens[1]);
+                if (chdir(str1Tokens[1]) != 0){
+                    printf("Illegal command or arguments\n");
+                }
             }
             else if (strcmp(str1Tokens[0],"exit")==0)
             {
@@ -624,7 +628,7 @@ void executeCommand(char *str)
                     }
                     if (execvp(str1Tokens[0], str1Tokens) < 0)
                     {
-                        printf("Child Pipe 1: Illegal command or arguments\n");
+                        printf("Illegal command or arguments\n");
                         exit(1);
                     }
                 }
@@ -644,7 +648,7 @@ void executeCommand(char *str)
                     str1Tokens[1] = NULL;
                     if (execvp(str1Tokens[0], str1Tokens) < 0)
                     {
-                        printf("Child Pipe 1: Illegal command or arguments\n");
+                        printf("Illegal command or arguments\n");
                         exit(1);
                     }
                 }
@@ -661,7 +665,7 @@ void executeCommand(char *str)
                 //This is for checkcpupercentage and checkresidentmemory
                 if (execvp(str1Tokens[0], str1Tokens) < 0)
                 {
-                    printf("Child Pipe 1: Illegal command or arguments\n");
+                    printf("Illegal command or arguments\n");
                     exit(1);
                 }
             }
@@ -786,7 +790,7 @@ void executeCommand(char *str)
                             }
                             if (execvp(str2Tokens[0], str2Tokens) < 0)
                             {
-                                printf("​Child Pipe 2: Illegal command or arguments\n");
+                                printf("​Illegal command or arguments\n");
                                 exit(1);
                             }
                         }
@@ -806,13 +810,13 @@ void executeCommand(char *str)
                             str2Tokens[1] = io_input;
                             if (execvp(str2Tokens[0], str2Tokens) < 0)
                             {
-                                printf("Child Pipe 2: Illegal command or arguments\n");
+                                printf("Illegal command or arguments\n");
                                 exit(1);
                             }
                         }
 
                         if (strcmp(str2Tokens[0], "ps") == 0 && commandCheckerFlag2 == 2){
-                            printf("Entered ps for 2nd child\n");
+                            //printf("Entered ps for 2nd child\n");
                             int fd;
                             if(file2[0]!=NULL)
                             {
@@ -824,7 +828,7 @@ void executeCommand(char *str)
                             scanf("%s", io_input);
                             close(fd);
                             str2Tokens[3]=io_input;
-                            printf("io_input is: %s\n",io_input);
+                            //printf("io_input is: %s\n",io_input);
                         }
 
                         /*
@@ -841,7 +845,7 @@ void executeCommand(char *str)
                         //This is for checkcpupercentage and checkresidentmemory
                         if (execvp(str2Tokens[0], str2Tokens) < 0)
                         {
-                            printf("Child Pipe 2: Illegal command or arguments\n");
+                            printf("Illegal command or arguments\n");
                             exit(1);
                         }
 
@@ -927,7 +931,7 @@ void sigint_handler(int sig)
 
     //printf("​ the pid is: %d and  buffer string is : %s", getpid(),first_command);
 
-    if (strcmp(buffer, "Y\n") == 0 || strcmp(buffer, "y\n") == 0)
+    if (strcmp(buffer, "Y\n") == 0)
     {
         //kill(getpid(), SIGKILL);
         exit(0);
@@ -1021,7 +1025,7 @@ int main()
                     int fd = open(str1Tokens[1], O_RDONLY);
                     if (fd < 0)
                     {
-                        printf("​main: Illegal command or arguments​ \n");
+                        printf("​Illegal command or arguments​ \n");
                     }
                     else
                     {

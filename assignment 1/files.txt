@@ -1,4 +1,3 @@
-Pipe closed 
 a.out
 checkcpupercentage
 checkcpupercentage.c
@@ -9,6 +8,7 @@ makefile
 myshell
 myshell.c
 ouput.txt
+"output.txt"
 output.txt
 Problem Statement.pdf
 references.txt
