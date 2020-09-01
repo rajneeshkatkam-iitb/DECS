@@ -8,7 +8,7 @@
 
 
 //Compute the utime and stime of the process
-void read_utime_stime(int fd, char *buffer,long long int *utime, long long int *stime){
+void read_utime_stime(int fd, char *buffer,long double *utime, long double *stime){
 
     read(fd,buffer,200);
     for (int i = 0; i < 13; i++) { 
@@ -20,7 +20,7 @@ void read_utime_stime(int fd, char *buffer,long long int *utime, long long int *
 }
 
 //Compute the total time
-void read_totaltime(int fd,char *buffer,long long int *totaltime)
+void read_totaltime(int fd,char *buffer,long double *totaltime)
 {
 
     read(fd, buffer, 200);
@@ -43,10 +43,10 @@ void read_totaltime(int fd,char *buffer,long long int *totaltime)
 int main(int argc, char *argv[]){
 
     //reading the 14th and 15th values of /proc/pid/stat
-    long long int utime[2],stime[2];
+    long double utime[2],stime[2];
 
     //reading total time from /proc/stat
-    long long int totaltime[2];
+    long double totaltime[2];
 
     //No of cpu cores
     int cores=sysconf(_SC_NPROCESSORS_ONLN);
@@ -85,7 +85,7 @@ int main(int argc, char *argv[]){
     close(fd);
     close(fdcpu);
 
-    long long int ttime_diff=totaltime[1]-totaltime[0];
+    long double ttime_diff=totaltime[1]-totaltime[0];
     long double utime_percentage= ((utime[1]-utime[0])*cores*100)/ttime_diff;
     long double stime_percentage= ((stime[1]-stime[0])*cores*100)/ttime_diff;
 

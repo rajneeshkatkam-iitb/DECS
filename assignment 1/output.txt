@@ -1,2 +1,15 @@
-user mode cpu percentage: 83.00%
-system mode cpu percentage: 12.00%
+30260
+files.txt
+rja
+basant tommy
+sdk
+xavie
+parsi
+common
+what a play
+ceer
+tommy
+siddhu tommy
+cricket
+qwetcha
+a.out

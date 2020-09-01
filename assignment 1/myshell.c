@@ -7,10 +7,10 @@
 #include <fcntl.h>
 #include <signal.h>
 
-static char *builtinCommands[3] = {"cd", "help", "exit"};
+static char *builtinCommands[2] = {"cd", "exit"};
 static char *customCommands[10] = {"checkcpupercentage", "checkresidentmemory", "listFiles", "sortFile"};
 static int commantCount = 4;
-static int builtinCount = 3;
+static int builtinCount = 2;
 
 // 0->Not builtin or custom. 1->builtin. 2->custom
 int CommandsChecker(char *command)
@@ -218,7 +218,7 @@ void fileDoubleQuotesRemovalFromTokens(char **file){
     {
         if(file[1][0]=='"')
         {
-            printf("File[1] Before: %s \t",file[1]);
+            //printf("File[1] Before: %s \t",file[1]);
             file[1]=&file[1][1];
             int j=1;
             while(file[1][j]!='"')
@@ -230,7 +230,7 @@ void fileDoubleQuotesRemovalFromTokens(char **file){
             }
             if(file[1][j]=='"')
                 file[1][j]='\0';
-            printf("File[1] After: %s \n",file[1]);
+            //printf("File[1] After: %s \n",file[1]);
         }
     }
 
@@ -278,8 +278,14 @@ void executeCommand(char *str)
 
         checkCustomCommands(str1Tokens);
 
-        ///printing tokens
         /*
+        if(file[0]!=NULL)
+            printf("file[0]: %s\t",file[0]);
+
+        if(file[1]!=NULL)
+            printf("file[1]: %s\n",file[1]);
+        ///printing tokens
+        
         printf("Tokens are printed below:\n");
         int i = 0;
         while (str1Tokens[i] != NULL)
@@ -293,7 +299,20 @@ void executeCommand(char *str)
         if (commandCheckerFlag == 1)
         {
             // runBuiltIn(str1Tokens, file, direction);
-            printf("run builtin command \n");
+            //printf("run builtin command \n");
+
+            //This is for checkcpupercentage and checkresidentmemory
+            if (strcmp(str1Tokens[0],"cd")==0)
+            {
+                chdir(str1Tokens[1]);
+            }
+            else if (strcmp(str1Tokens[0],"exit")==0)
+            {
+                exit(0);
+            }
+            else{
+                printf("Illegal command or arguments\n");
+            }
             // char *args[]={"cd","..",NULL};
             // chdir("..");
         }
@@ -431,7 +450,7 @@ void executeCommand(char *str)
                 if (execvp(str1Tokens[0], str1Tokens) < 0)
                 {
                     printf("​Child: Illegal command or arguments\n");
-                    exit(0);
+                    exit(1);
                 }
             }
             else
@@ -496,7 +515,17 @@ void executeCommand(char *str)
         if (commandCheckerFlag1 == 1)
         {
             // runBuiltIn(str1Tokens, file, direction);
-            printf("run builtin command \n");
+            if (strcmp(str1Tokens[0],"cd")==0)
+            {
+                chdir(str1Tokens[1]);
+            }
+            else if (strcmp(str1Tokens[0],"exit")==0)
+            {
+                exit(0);
+            }
+            else{
+                printf("Illegal command or arguments\n");
+            }
             // char *args[]={"cd","..",NULL};
             // chdir("..");
         }
@@ -719,7 +748,7 @@ void executeCommand(char *str)
                             {
                                 dup2(fd_output, 1);
                                 close(fd_output);
-                                printf("Pipe closed \n");
+                                //printf("Pipe closed \n");
                                 //printf("Output stream dupped with integer: %d\n",fd_output);
                             }
                         }
@@ -758,7 +787,7 @@ void executeCommand(char *str)
                             if (execvp(str2Tokens[0], str2Tokens) < 0)
                             {
                                 printf("​Child Pipe 2: Illegal command or arguments\n");
-                                exit(0);
+                                exit(1);
                             }
                         }
 
@@ -778,7 +807,7 @@ void executeCommand(char *str)
                             if (execvp(str2Tokens[0], str2Tokens) < 0)
                             {
                                 printf("Child Pipe 2: Illegal command or arguments\n");
-                                exit(0);
+                                exit(1);
                             }
                         }
 
@@ -813,7 +842,7 @@ void executeCommand(char *str)
                         if (execvp(str2Tokens[0], str2Tokens) < 0)
                         {
                             printf("Child Pipe 2: Illegal command or arguments\n");
-                            exit(0);
+                            exit(1);
                         }
 
 
