@@ -6,6 +6,7 @@ struct barrier_t
 		Todo
 		Barrier related variables
 	*/
+	int thread_count;
 	
 };
 

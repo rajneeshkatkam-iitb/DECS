@@ -33,6 +33,7 @@ void *ThreadRoutine(void *arg)
 
 	if(id == 1) 
 		barrier_wait(&b1);
+	pthread_exit((void*)0);
 }
 
 int main()

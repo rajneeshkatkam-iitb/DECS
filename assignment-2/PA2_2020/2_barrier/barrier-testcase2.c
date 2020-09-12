@@ -35,6 +35,8 @@ void *ThreadRoutine(void *arg)
 			sum += array[i];
 		printf("Sum2 = %ld \n",sum);
 	}
+
+	pthread_exit((void*)0);
 }
 
 int main()

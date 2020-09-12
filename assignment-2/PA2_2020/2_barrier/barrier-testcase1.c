@@ -23,6 +23,8 @@ void *ThreadRoutine(void *arg)
 			sum += array[i];
 		printf("Sum = %ld \n", sum);
 	}
+
+	pthread_exit((void*)0);
 }
 
 int main()
