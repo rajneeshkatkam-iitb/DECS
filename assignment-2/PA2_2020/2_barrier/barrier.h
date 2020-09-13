@@ -6,7 +6,10 @@ struct barrier_t
 		Todo
 		Barrier related variables
 	*/
-	int thread_count;
+	int thread_count_initial;
+	int count;
+	pthread_mutex_t m_lock;
+	pthread_cond_t condition_variable;
 	
 };
 
