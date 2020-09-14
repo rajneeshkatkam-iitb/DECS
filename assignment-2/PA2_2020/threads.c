@@ -23,7 +23,6 @@ void *count_incrementor(void* id){
 	
 }
 
-
 int main(int argc, char const *argv[])
 {
 	/* Write you code to create n threads here*/
@@ -36,7 +35,7 @@ int main(int argc, char const *argv[])
 	if(argc >1)
 	{
 		NUMBER_OF_THREADS=atoi(argv[1]);
-		printf("NUMBER_OF_THREADS: %lld\n",NUMBER_OF_THREADS);
+		//printf("NUMBER_OF_THREADS: %lld\n",NUMBER_OF_THREADS);
 		if(NUMBER_OF_THREADS==0)
 			return 0;
 	}

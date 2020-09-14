@@ -76,7 +76,6 @@ int main(int argc, char const *argv[])
 		pthread_mutex_destroy(&m_lock[i]);
 	}
 
-
 	for (int i = 0; i < 10; ++i)
 	{
 		printf("%d\n", data[i]);
