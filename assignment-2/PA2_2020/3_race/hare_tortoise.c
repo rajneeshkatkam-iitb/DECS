@@ -64,24 +64,6 @@ struct lock turtle_main_lock, hare_main_lock;
 struct condition turtle_main_cv, hare_main_cv;
 int turtle_thread_reached=0, hare_thread_reached=0;
 
-//Custom Command shell with basic functionalities
-void* command_shell()
-{
-	while(no_winner)
-	{
-		char input[100];
-		read(0,input,100);
-		if(strcmp(input,"e")==0)
-			no_winner=0;
-		else if(strcmp(input,"t")==0)
-		{
-			printf("Time: %lld \n",clock_tick);
-		}
-		
-	}
-	printf("Command shell thread exited..\n");
-	pthread_exit((void*)0);
-}
 
 long int turtle_distance=0;
 struct lock turtle_distance_lock;
@@ -119,7 +101,7 @@ void* Turtle(void *arg)
 		{
 			lock_acquire(&turtle_distance_lock);
 			turtle_distance+=long_tortoise_speed;
-			printf("Turtle action performed : %8d \t turtle_distance: %ld\n",curr_time, turtle_distance);
+			printf("Turtle curr_time : %14d \t turtle_distance: %ld\n",curr_time, turtle_distance);
 			
 			if(turtle_distance>=finish_distance)
 			{
@@ -134,13 +116,13 @@ void* Turtle(void *arg)
 		cond_signal(&turtle_to_reporter_cv,&turtle_reporter_lock);
 		lock_release(&turtle_reporter_lock);
 	}
-		printf("Turtle: curr_time: %d \t turtle_distance: %ld \t overall_winner: %c\n",curr_time,turtle_distance,overall_winner);
+	printf("Turtle: curr_time: %d \t turtle_distance: %ld \t overall_winner: %c\n",curr_time,turtle_distance,overall_winner);
 	printf("Turtle thread exited..\n");
 	pthread_exit((void*)0);
 }
 
 
-long int hare_distance=0;
+long int hare_distance=0, hare_sleep_counter;
 struct lock hare_distance_lock;
 // // Hare Thread
 // 	long int *long_hare_array=(long int*)malloc(3*sizeof(long int));
@@ -154,6 +136,8 @@ void* Hare(void *arg)
 	long int long_hare_sleep_time=temp_long_hare_array[1];
 	long int long_hare_turtle_distance_for_sleep=temp_long_hare_array[2];
 	int curr_time;
+	hare_sleep_counter=long_hare_sleep_time; // Intialised to max in order to satisfy condition initially
+
 	while(no_winner){
 
 		// This if condition will satisfy only once at the beginning
@@ -179,14 +163,41 @@ void* Hare(void *arg)
 		//Perform Action of Hare if no Winner
 		if(no_winner)
 		{
-			printf("Hare action performed : %10d \t long_hare_speed: %ld \t long_hare_sleep_time: %ld \t long_hare_turtle_distance_for_sleep: %ld\n",curr_time, long_hare_speed, long_hare_sleep_time, long_hare_turtle_distance_for_sleep);
+			if(hare_sleep_counter==long_hare_sleep_time)
+			{
+				lock_acquire(&turtle_distance_lock);
+				if((hare_distance-turtle_distance)<=long_hare_turtle_distance_for_sleep)
+				{
+					// Hare will work
+					lock_acquire(&hare_distance_lock);
+					hare_distance+=long_hare_speed;
+					printf("Hare Worked: curr_time : %8d \t hare_sleep_counter: %ld \t hare_distance: %ld\n",curr_time, hare_sleep_counter, hare_distance);
+					if(hare_distance>=finish_distance)
+					{
+						overall_winner='H';
+						no_winner=0;
+					}
+					lock_release(&hare_distance_lock);
+				}
+				// Hare will sleep
+				hare_sleep_counter=0;
+				printf("Hare Sleept: curr_time : %8d \t hare_sleep_counter: %ld \t hare_distance: %ld\n",curr_time, hare_sleep_counter, hare_distance);
+				//printf("Hare action performed : %10d \t long_hare_speed: %ld \t long_hare_sleep_time: %ld \t long_hare_turtle_distance_for_sleep: %ld\n",curr_time, long_hare_speed, long_hare_sleep_time, long_hare_turtle_distance_for_sleep);
+				lock_release(&turtle_distance_lock);
+			}
+			else
+			{
+				hare_sleep_counter+=1;
+				printf("Hare Sleeping: curr_time : %8d \t hare_sleep_counter: %ld \t hare_distance: %ld\n",curr_time, hare_sleep_counter, hare_distance);
+			}
+
 		}
 
 		cond_signal(&hare_to_reporter_cv,&hare_reporter_lock);
 		lock_release(&hare_reporter_lock);
 
 	}
-	printf("Hare: curr_time: %d \n",curr_time);
+	printf("Hare: curr_time: %d \t hare_distance: %ld \t overall_winner: %c\n",curr_time,hare_distance,overall_winner);
 	printf("Hare thread exited..\n");
 	pthread_exit((void*)0);
 }
@@ -239,7 +250,7 @@ void* Randomizer(void *arg)
 		//Perform Action of Randomizer if no Winner
 		if(no_winner)
 		{
-			printf("Randomizer action performed : %5d \n",curr_time);
+			printf("\nRandomizer action performed : %5d \n",curr_time);
 		}
 
 
@@ -267,7 +278,7 @@ void* Report(void *arg)
 		lock_acquire(&reporter_lock);
 		clock_tick+=1;
 		if(clock_tick%printing_delay==0)
-			printf("Hare Pos: h \t Turtle Pos: t \t clock_tick: %3lld \n",clock_tick);
+			printf("\n\n\n\n\n \t \t Hare Pos: %ld \t Turtle Pos: %ld \t clock_tick: %3lld \n\n\n\n\n", hare_distance, turtle_distance, clock_tick);
 		lock_release(&reporter_lock);
 
 
@@ -309,7 +320,9 @@ void* Report(void *arg)
 
 		}
 
-		//usleep(100000);
+		usleep(100000);
+		//usleep(500000);
+		//sleep(1);
 
 	}
 	printf("Report: clock_tick: %lld \n",clock_tick);
@@ -325,12 +338,10 @@ void* Report(void *arg)
 
 char init(struct race *race)
 {
-	pthread_t cmd_shell;
 	
 	// Race Final Distance
 	finish_distance=race->finish_distance;
 	printf("TOTAL DISTANCE OF RACE: %4d\n", finish_distance);
-	pthread_create(&cmd_shell,NULL,command_shell,NULL);
 
 	// Locks used for threads
 	lock_init(&reporter_lock);
@@ -455,7 +466,6 @@ char init(struct race *race)
 	pthread_join(turtle_thread, NULL);
 	pthread_join(hare_thread, NULL);
 	pthread_join(reporter_thread, NULL);
-	pthread_join(cmd_shell, NULL);
 
 	// Freeing of Heap allocated memory
 	free(long_hare_array);
