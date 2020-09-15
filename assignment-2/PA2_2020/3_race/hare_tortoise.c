@@ -70,7 +70,7 @@ void* command_shell()
 	while(no_winner)
 	{
 		char input[100];
-		scanf("%s",input);
+		read(0,input,100);
 		if(strcmp(input,"e")==0)
 			no_winner=0;
 		else if(strcmp(input,"t")==0)
@@ -79,11 +79,13 @@ void* command_shell()
 		}
 		
 	}
-
+	printf("Command shell thread exited..\n");
 	pthread_exit((void*)0);
 }
 
-
+long int turtle_distance=0;
+struct lock turtle_distance_lock;
+char overall_winner='-';
 // // Turtle Thread
 // long int long_tortoise_speed=race->tortoise_speed;
 void* Turtle(void *arg)
@@ -112,19 +114,34 @@ void* Turtle(void *arg)
 		curr_time=clock_tick;
 		lock_release(&reporter_lock);
 
-		//Perform Action of Turtle
-		printf("Turtle action performed : %8d \t long_tortoise_speed: %ld\n",curr_time, long_tortoise_speed);
+		//Perform Action of Turtle if no Winner
+		if(no_winner)
+		{
+			lock_acquire(&turtle_distance_lock);
+			turtle_distance+=long_tortoise_speed;
+			printf("Turtle action performed : %8d \t turtle_distance: %ld\n",curr_time, turtle_distance);
+			
+			if(turtle_distance>=finish_distance)
+			{
+				overall_winner='T';
+				no_winner=0;
+			}
+			lock_release(&turtle_distance_lock);
+		}
+		
 
 
 		cond_signal(&turtle_to_reporter_cv,&turtle_reporter_lock);
 		lock_release(&turtle_reporter_lock);
 	}
-	
+		printf("Turtle: curr_time: %d \t turtle_distance: %ld \t overall_winner: %c\n",curr_time,turtle_distance,overall_winner);
+	printf("Turtle thread exited..\n");
 	pthread_exit((void*)0);
 }
 
 
-
+long int hare_distance=0;
+struct lock hare_distance_lock;
 // // Hare Thread
 // 	long int *long_hare_array=(long int*)malloc(3*sizeof(long int));
 // 	long_hare_array[0]=race->hare_speed;
@@ -159,14 +176,18 @@ void* Hare(void *arg)
 		curr_time=clock_tick;
 		lock_release(&reporter_lock);
 
-		//Perform Action of Hare
-		printf("Hare action performed : %10d \t long_hare_speed: %ld \t long_hare_sleep_time: %ld \t long_hare_turtle_distance_for_sleep: %ld\n",curr_time, long_hare_speed, long_hare_sleep_time, long_hare_turtle_distance_for_sleep);
-
+		//Perform Action of Hare if no Winner
+		if(no_winner)
+		{
+			printf("Hare action performed : %10d \t long_hare_speed: %ld \t long_hare_sleep_time: %ld \t long_hare_turtle_distance_for_sleep: %ld\n",curr_time, long_hare_speed, long_hare_sleep_time, long_hare_turtle_distance_for_sleep);
+		}
 
 		cond_signal(&hare_to_reporter_cv,&hare_reporter_lock);
 		lock_release(&hare_reporter_lock);
 
 	}
+	printf("Hare: curr_time: %d \n",curr_time);
+	printf("Hare thread exited..\n");
 	pthread_exit((void*)0);
 }
 
@@ -215,8 +236,11 @@ void* Randomizer(void *arg)
 		curr_time=clock_tick;
 		lock_release(&reporter_lock);
 
-		//Perform Action of Hare
-		printf("Randomizer action performed : %5d \n",curr_time);
+		//Perform Action of Randomizer if no Winner
+		if(no_winner)
+		{
+			printf("Randomizer action performed : %5d \n",curr_time);
+		}
 
 
 		cond_signal(&randomizer_to_reporter_cv,&randomizer_reporter_lock);
@@ -225,8 +249,8 @@ void* Randomizer(void *arg)
 
 
 	}	
-
-	
+	printf("Randomizer: curr_time: %d \n",curr_time);
+	printf("Randomizer thread exited..\n");
 	pthread_exit((void*)0);
 }
 
@@ -268,10 +292,28 @@ void* Report(void *arg)
 		cond_wait(&hare_to_reporter_cv,&hare_reporter_lock);
 		lock_release(&hare_reporter_lock);
 
-		usleep(500000);
+		// If we got the winner (i.e. no_winner=0). Stop the other threads
+		if(no_winner==0)
+		{
+			lock_acquire(&randomizer_reporter_lock);
+			cond_signal(&reporter_to_randomizer_cv,&randomizer_reporter_lock);
+			lock_release(&randomizer_reporter_lock);
+
+			lock_acquire(&turtle_reporter_lock);
+			cond_signal(&reporter_to_turtle_cv,&turtle_reporter_lock);
+			lock_release(&turtle_reporter_lock);
+
+			lock_acquire(&hare_reporter_lock);
+			cond_signal(&reporter_to_hare_cv,&hare_reporter_lock);
+			lock_release(&hare_reporter_lock);
+
+		}
+
+		//usleep(100000);
 
 	}
-	
+	printf("Report: clock_tick: %lld \n",clock_tick);
+	printf("Report thread exited..\n");
 	pthread_exit((void*)0);
 }
 
@@ -288,7 +330,6 @@ char init(struct race *race)
 	// Race Final Distance
 	finish_distance=race->finish_distance;
 	printf("TOTAL DISTANCE OF RACE: %4d\n", finish_distance);
-
 	pthread_create(&cmd_shell,NULL,command_shell,NULL);
 
 	// Locks used for threads
@@ -296,6 +337,8 @@ char init(struct race *race)
 	lock_init(&turtle_reporter_lock);
 	lock_init(&hare_reporter_lock);
 	lock_init(&randomizer_reporter_lock);
+	lock_init(&hare_distance_lock);
+	lock_init(&turtle_distance_lock);
 
 	// CVs used inside for thread synchronization
 	cond_init(&turtle_to_reporter_cv);
@@ -418,5 +461,5 @@ char init(struct race *race)
 	free(long_hare_array);
 	free(repo_data);
 
-	return '-'; 
+	return overall_winner; 
 }
