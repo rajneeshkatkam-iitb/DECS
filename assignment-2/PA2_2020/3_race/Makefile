@@ -13,5 +13,5 @@ clean:
 
 run: hare_tortoise
 	./hare_tortoise test-file=Testcases/test1.txt
-	./hare_tortoise test-file=Testcases/test2.txt
-	./hare_tortoise test-file=Testcases/test3.txt
+	# ./hare_tortoise test-file=Testcases/test2.txt
+	# ./hare_tortoise test-file=Testcases/test3.txt
