@@ -68,6 +68,13 @@ int turtle_thread_reached=0, hare_thread_reached=0;
 long int turtle_distance=0;
 struct lock turtle_distance_lock;
 char overall_winner='-';
+
+long int hare_distance=0, hare_sleep_counter;
+struct lock hare_distance_lock;
+
+
+
+
 // // Turtle Thread
 // long int long_tortoise_speed=race->tortoise_speed;
 void* Turtle(void *arg)
@@ -106,9 +113,15 @@ void* Turtle(void *arg)
 			if(turtle_distance>=finish_distance)
 			{
 				overall_winner='T';
+				turtle_distance=finish_distance;
 				no_winner=0;
 			}
 			lock_release(&turtle_distance_lock);
+		}
+		else if(no_winner==0 && overall_winner=='H' && hare_distance==turtle_distance)
+		{
+			printf("Both reached the final distance at same time. Hence Turtle is declared winner!!\n");
+			overall_winner='T';
 		}
 		
 
@@ -122,8 +135,6 @@ void* Turtle(void *arg)
 }
 
 
-long int hare_distance=0, hare_sleep_counter;
-struct lock hare_distance_lock;
 // // Hare Thread
 // 	long int *long_hare_array=(long int*)malloc(3*sizeof(long int));
 // 	long_hare_array[0]=race->hare_speed;
@@ -175,6 +186,7 @@ void* Hare(void *arg)
 					if(hare_distance>=finish_distance)
 					{
 						overall_winner='H';
+						hare_distance=finish_distance;
 						no_winner=0;
 					}
 					lock_release(&hare_distance_lock);
@@ -217,12 +229,15 @@ void* Randomizer(void *arg)
 	struct RandomizerRepositionData *temp_repo_data=(struct RandomizerRepositionData *)arg;
 	struct Repositioning *temp_reposition_array=temp_repo_data->reposition_array;
 	int temp_repositioning_count=temp_repo_data->repositioning_count;
+	int array_index=0;  // This is used to read the values of the time from the array.
+
 
 	printf("Reposition Array Data:\n");
 	for(int i=0;i<temp_repositioning_count;i++)
 	{
 		printf("player: %c \t time: %d \t distance: %d \n",temp_reposition_array[i].player, temp_reposition_array[i].time, temp_reposition_array[i].distance);
 	}
+
 
 	int curr_time;
 	while(no_winner){
@@ -250,7 +265,47 @@ void* Randomizer(void *arg)
 		//Perform Action of Randomizer if no Winner
 		if(no_winner)
 		{
-			printf("\nRandomizer action performed : %5d \n",curr_time);
+			if(array_index<temp_repositioning_count && temp_reposition_array[array_index].time==curr_time)
+			{
+
+				printf("\n\n\n\n\n \t \t \t Randomizer Invoked at curr_time: %5d \n",curr_time);
+
+				if(temp_reposition_array[array_index].player=='H')
+				{
+					hare_distance+=temp_reposition_array[array_index].distance;
+
+					if(hare_distance<0)
+						hare_distance=0;
+					else if (hare_distance>=finish_distance)
+					{
+						overall_winner='H';
+						hare_distance=finish_distance;
+						no_winner=0;
+					}
+
+					printf("\t \t \t Hare repositoned to: %ld \t with shifting distance: %d \n\n\n\n", hare_distance, temp_reposition_array[array_index].distance);
+
+				}
+				else if (temp_reposition_array[array_index].player=='T')
+				{
+					turtle_distance+=temp_reposition_array[array_index].distance;
+
+					if(turtle_distance<0)
+						turtle_distance=0;
+					else if (turtle_distance>=finish_distance)
+					{
+						overall_winner='T';
+						turtle_distance=finish_distance;
+						no_winner=0;
+					}
+
+					printf("\t \t \t Turtle repositoned to: %ld \t with shifting distance: %d \n\n\n\n", turtle_distance, temp_reposition_array[array_index].distance);
+
+				}
+
+
+				array_index++;
+			}
 		}
 
 
@@ -278,7 +333,7 @@ void* Report(void *arg)
 		lock_acquire(&reporter_lock);
 		clock_tick+=1;
 		if(clock_tick%printing_delay==0)
-			printf("\n\n\n\n\n \t \t Hare Pos: %ld \t Turtle Pos: %ld \t clock_tick: %3lld \n\n\n\n\n", hare_distance, turtle_distance, clock_tick);
+			printf("\n\n\n\n\n \t \t \t Hare Pos: %ld \t Turtle Pos: %ld \t clock_tick: %3lld \n\n\n\n\n", hare_distance, turtle_distance, clock_tick);
 		lock_release(&reporter_lock);
 
 
@@ -323,6 +378,7 @@ void* Report(void *arg)
 		usleep(100000);
 		//usleep(500000);
 		//sleep(1);
+		printf("\n\n");
 
 	}
 	printf("Report: clock_tick: %lld \n",clock_tick);
