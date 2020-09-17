@@ -329,11 +329,9 @@ void* Report(void *arg)
 	long int printing_delay=(long int)arg;
 	while(no_winner){
 
-		//Performing Time Incrementing and Reporting
+		//Performing Time Incrementing
 		lock_acquire(&reporter_lock);
 		clock_tick+=1;
-		if(clock_tick%printing_delay==0)
-			printf("\n\n\n\n\n \t \t \t Hare Pos: %ld \t Turtle Pos: %ld \t clock_tick: %3lld \n\n\n\n\n", hare_distance, turtle_distance, clock_tick);
 		lock_release(&reporter_lock);
 
 
@@ -342,6 +340,10 @@ void* Report(void *arg)
 		cond_signal(&reporter_to_randomizer_cv,&randomizer_reporter_lock);
 		cond_wait(&randomizer_to_reporter_cv,&randomizer_reporter_lock);
 		lock_release(&randomizer_reporter_lock);
+
+		//Reporting at the specified printing delay
+		if(clock_tick%printing_delay==0)
+			printf("\n\n\n\n \t \t \t Hare Position: %ld \t Turtle Position: %ld \t at Time: %3lld \n\n\n\n", hare_distance, turtle_distance, clock_tick);
 
 
 		// Turtle will perform for 1 unit
